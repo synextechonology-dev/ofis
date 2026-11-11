@@ -1,4 +1,4 @@
-# Roadmap — o que já está no código e o que falta
+﻿# Roadmap — o que já está no código e o que falta
 
 A referência visual e de comportamento de **todas** as telas é `docs/previa/ofis-previa.html`
 (abra no navegador; é a prévia aprovada pelo João). O código real ainda não tem tudo que a prévia mostra.
@@ -45,7 +45,7 @@ na versão atual e resolva os conflitos.
      quantidade de notas (valor de nota não é guardado). Obrigações e pendências por cliente ainda vazias no banco.
    - ~~Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado~~ ✅ feita em 11/11/2026
      (`components/busca-geral.tsx`; lista de telas em `lib/navegacao.ts`, usada pelo menu e pela busca).
-   - Lançar Nota "em sequência" (Enter lança e continua com o mesmo cliente; lista "Lançadas agora").
+   - ~~Lançar Nota "em sequência"~~ ✅ feito em 11/11/2026 (sem campo de valor; número sugerido e aviso de repetida).
    - Restyle das demais páginas com os componentes do design system (`docs/design-system/`).
 3. **Clientes com vários tipos de emissão** na tela de Clientes (`tipos_emissao` já existe no banco; a tela usa só `tipo_emissao`).
 4. **CPF/CNPJ em clientes** da base (coluna nova + máscara/validação reaproveitando `lib/esporadicos.ts`).
