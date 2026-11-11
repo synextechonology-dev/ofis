@@ -27,7 +27,14 @@ Use `mensagemDeErro()` de `src/lib/supabase.ts` para mostrar esses erros em port
 - `notas_fiscais`: `numero_nf`, `data_emissao`, `cliente` (nome, preenchido pelo banco), `cliente_id` **ou** `cliente_esporadico_id`,
   `status` (`autorizada|cancelada|denegada`), `tipo_emissao`, `valor_cobranca` (só esporádicos), `repassado_financeiro_em`, datas.
   **Não existe valor da nota**: o escritório decidiu não guardar por enquanto.
-- `mei_faturamento` (`cliente_id`, `ano`, `faturamento`, `limite_anual` = 81.000), `obrigacoes_acessorias`, `recorrencias`,
+- `mei_faturamento` (`cliente_id`, `ano`, `faturamento`, `faturamento_sem_mes`, `limite_anual` = 81.000): cabeçalho do ano.
+  Desde 11/11/2026 o **acumulado é calculado pelo banco**: `faturamento = faturamento_sem_mes + soma dos meses`.
+  Gravar `faturamento` direto (versão antiga do app) ajusta `faturamento_sem_mes`; o acumulado não pode ficar menor que
+  a soma dos meses (`23514`). Apagar o ano apaga os meses.
+- `mei_faturamento_mensal` (`cliente_id`, `ano`, `mes` 1–12, `faturamento`, `observacao`; único por cliente/ano/mês):
+  faturamento mês a mês lançado pela equipe, **sem ligação com o valor das notas**. Lançar um mês cria o cabeçalho do ano
+  se faltar. Migração `20261111170000_mei_faturamento_mensal.sql`.
+- `obrigacoes_acessorias`, `recorrencias`,
   `eventos_calendario`, `tarefas`, `comunicacoes`, `rentabilidade_clientes`.
 
 **View**

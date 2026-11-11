@@ -39,8 +39,8 @@ na versão atual e resolva os conflitos.
 
 1. ~~**Tela de equipe**~~ ✅ feita em 11/11/2026 (`/equipe`, migração `20261111140000_tela_equipe.sql`).
 2. **Telas da prévia ainda não portadas** — comparar cada uma com `docs/previa/ofis-previa.html`:
-   - Página do cliente MEI (clicar no cliente abre notas, % do limite e barra de progresso; faixas 60/85/100% em `lib/mei.ts`,
-     a prévia usa 80/100 — **João precisa decidir**).
+   - ~~Página do cliente MEI~~ ✅ feita em 11/11/2026 (`/mei/$clienteId`, faturamento mês a mês). Pendente: CNPJ e
+     atividade no cabeçalho (depende do item 4) e os botões de PDF/relatório (dependem do relatório mensal).
    - Relatório mensal do cliente (seções, marca do escritório, cor, PDF e mensagem para o cliente).
    - Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado.
    - Lançar Nota "em sequência" (Enter lança e continua com o mesmo cliente; lista "Lançadas agora").
@@ -58,3 +58,7 @@ na versão atual e resolva os conflitos.
 - Esporádico é cobrado por emissão; padrão R$ 50, às vezes R$ 100 (por isso o valor é por nota).
 - Pares "Rural" são clientes separados. Os demais duplicados foram juntados.
 - Sistema é **interno**: cadastro aberto desligado, acesso só por convite.
+- MEI: faixas **80/100%** (abaixo de 80% regular, 80–100% atenção, acima de 100% excedido). (11/11/2026)
+- MEI: faturamento lançado **mês a mês** pela equipe (`mei_faturamento_mensal`), sem guardar valor de nota. (11/11/2026)
+- Mudanças de banco: Claude escreve a migração e o teste; João roda no SQL Editor (o conector não consegue escrever
+  a partir do Claude Code); Claude confere com leitura. (11/11/2026)

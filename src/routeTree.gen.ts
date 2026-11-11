@@ -26,6 +26,7 @@ import { Route as AuthenticatedNotasDoDiaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedObrigacoesRouteImport } from './routes/_authenticated/obrigacoes'
 import { Route as AuthenticatedRentabilidadeRouteImport } from './routes/_authenticated/rentabilidade'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
+import { Route as AuthenticatedMeiClienteIdRouteImport } from './routes/_authenticated/mei_.$clienteId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -114,6 +115,12 @@ const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   path: '/tarefas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMeiClienteIdRoute =
+  AuthenticatedMeiClienteIdRouteImport.update({
+    id: '/mei_/$clienteId',
+    path: '/mei/$clienteId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/obrigacoes': typeof AuthenticatedObrigacoesRoute
   '/rentabilidade': typeof AuthenticatedRentabilidadeRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/mei/$clienteId': typeof AuthenticatedMeiClienteIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/obrigacoes': typeof AuthenticatedObrigacoesRoute
   '/rentabilidade': typeof AuthenticatedRentabilidadeRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/mei/$clienteId': typeof AuthenticatedMeiClienteIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/obrigacoes': typeof AuthenticatedObrigacoesRoute
   '/_authenticated/rentabilidade': typeof AuthenticatedRentabilidadeRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
+  '/_authenticated/mei_/$clienteId': typeof AuthenticatedMeiClienteIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/obrigacoes'
     | '/rentabilidade'
     | '/tarefas'
+    | '/mei/$clienteId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/obrigacoes'
     | '/rentabilidade'
     | '/tarefas'
+    | '/mei/$clienteId'
   id:
     | '__root__'
     | '/'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/_authenticated/obrigacoes'
     | '/_authenticated/rentabilidade'
     | '/_authenticated/tarefas'
+    | '/_authenticated/mei_/$clienteId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTarefasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mei_/$clienteId': {
+      id: '/_authenticated/mei_/$clienteId'
+      path: '/mei/$clienteId'
+      fullPath: '/mei/$clienteId'
+      preLoaderRoute: typeof AuthenticatedMeiClienteIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -374,6 +394,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedObrigacoesRoute: typeof AuthenticatedObrigacoesRoute
   AuthenticatedRentabilidadeRoute: typeof AuthenticatedRentabilidadeRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
+  AuthenticatedMeiClienteIdRoute: typeof AuthenticatedMeiClienteIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -391,6 +412,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedObrigacoesRoute: AuthenticatedObrigacoesRoute,
   AuthenticatedRentabilidadeRoute: AuthenticatedRentabilidadeRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
+  AuthenticatedMeiClienteIdRoute: AuthenticatedMeiClienteIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

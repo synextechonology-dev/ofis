@@ -16,6 +16,7 @@ dist-ssr
 .nitro
 .vercel
 *.local
+.claude/settings.local.json
 
 # Wrangler / Cloudflare
 .wrangler/
