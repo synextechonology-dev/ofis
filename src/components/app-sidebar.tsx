@@ -1,30 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard,
-  Users,
-  FilePlus2,
-  FileText,
-  CalendarDays,
-  History,
-  BarChart3,
-  Gauge,
   LogOut,
   Menu,
   X,
   ReceiptText,
-  Receipt,
-  ClipboardList,
-  TrendingUp,
-  FileCheck,
-  MessageSquare,
-  UserPlus,
-  UserCog,
   PanelLeftClose,
   PanelLeftOpen,
   Moon,
+  Search,
   Sun,
-  type LucideIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -32,55 +17,11 @@ import { supabase } from "@/lib/supabase";
 import { useMeuPapel } from "@/lib/equipe";
 import { useTema } from "@/lib/tema";
 import { cn } from "@/lib/utils";
-import type { FileRoutesByTo } from "@/routeTree.gen";
+import { EVENTO_ABRIR_BUSCA, EVENTO_ALTERNAR_MENU, GRUPOS, GRUPO_ADMIN } from "@/lib/navegacao";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type ItemNav = { to: keyof FileRoutesByTo; label: string; icon: LucideIcon };
-
-/** Menu agrupado por tarefa do dia a dia (mesma organização da prévia). */
-const GRUPOS: { titulo: string; itens: ItemNav[] }[] = [
-  {
-    titulo: "Operação",
-    itens: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/notas-do-dia", label: "Notas do Dia", icon: FileText },
-      { to: "/lancar-nota", label: "Lançar Nota", icon: FilePlus2 },
-      { to: "/tarefas", label: "Tarefas do Dia", icon: ClipboardList },
-      { to: "/comunicacoes", label: "Comunicações", icon: MessageSquare },
-    ],
-  },
-  {
-    titulo: "Clientes",
-    itens: [
-      { to: "/clientes", label: "Clientes", icon: Users },
-      { to: "/mei", label: "Controle MEI", icon: TrendingUp },
-      { to: "/esporadicos", label: "Esporádicos", icon: UserPlus },
-    ],
-  },
-  {
-    titulo: "Fiscal",
-    itens: [
-      { to: "/calendario", label: "Calendário", icon: CalendarDays },
-      { to: "/obrigacoes", label: "Obrigações", icon: FileCheck },
-      { to: "/historico", label: "Histórico", icon: History },
-    ],
-  },
-  {
-    titulo: "Análises",
-    itens: [
-      { to: "/analises", label: "Análises", icon: BarChart3 },
-      { to: "/rentabilidade", label: "Rentabilidade", icon: Gauge },
-      { to: "/relatorios", label: "Relatórios", icon: Receipt },
-    ],
-  },
-];
-
-/** Só aparece para administradores (a página também se protege sozinha). */
-const GRUPO_ADMIN: { titulo: string; itens: ItemNav[] } = {
-  titulo: "Administração",
-  itens: [{ to: "/equipe", label: "Equipe", icon: UserCog }],
-};
+const abrirBusca = () => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCA));
 
 const CHAVE_RECOLHIDO = "ofis-menu-recolhido";
 
@@ -111,7 +52,7 @@ export function AppSidebar() {
     }
   }, []);
 
-  // Atalho: Ctrl/Cmd + B recolhe ou abre o menu.
+  // Atalhos: Ctrl/Cmd + B (ou "[" pelos atalhos globais) recolhe ou abre o menu.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
@@ -119,8 +60,13 @@ export function AppSidebar() {
         alternarRecolhido();
       }
     }
+    const onAlternar = () => alternarRecolhido();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener(EVENTO_ALTERNAR_MENU, onAlternar);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(EVENTO_ALTERNAR_MENU, onAlternar);
+    };
   });
 
   function alternarRecolhido() {
@@ -180,6 +126,39 @@ export function AppSidebar() {
               {compacto ? "Expandir menu" : "Recolher menu"} (Ctrl+B)
             </TooltipContent>
           </Tooltip>
+        </div>
+
+        <div className="px-3 pb-1">
+          {compacto ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="mx-auto flex size-9 text-sidebar-foreground/75 hover:bg-sidebar-accent"
+                  onClick={abrirBusca}
+                  aria-label="Busca geral"
+                >
+                  <Search className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Buscar (Ctrl K)</TooltipContent>
+            </Tooltip>
+          ) : (
+            <button
+              type="button"
+              onClick={abrirBusca}
+              aria-label="Busca geral"
+              className="flex h-9 w-full items-center gap-2.5 rounded-md border border-sidebar-border px-3 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <Search className="size-4 shrink-0" />
+              <span className="flex-1 text-left">Buscar…</span>
+              <span className="flex gap-1 text-xs">
+                <kbd className="rounded border border-sidebar-border px-1 font-sans">Ctrl</kbd>
+                <kbd className="rounded border border-sidebar-border px-1 font-sans">K</kbd>
+              </span>
+            </button>
+          )}
         </div>
 
         <nav className="scroll-oculto flex-1 overflow-y-auto px-3 pb-3" aria-label="Menu principal">

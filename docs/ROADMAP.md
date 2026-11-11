@@ -43,7 +43,8 @@ na versão atual e resolva os conflitos.
      atividade no cabeçalho (depende do item 4) e os botões de PDF/relatório (dependem do relatório mensal).
    - ~~Relatório mensal do cliente~~ ✅ feito em 11/11/2026 (`/relatorios`). Clientes que não são MEI aparecem em
      quantidade de notas (valor de nota não é guardado). Obrigações e pendências por cliente ainda vazias no banco.
-   - Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado.
+   - ~~Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado~~ ✅ feita em 11/11/2026
+     (`components/busca-geral.tsx`; lista de telas em `lib/navegacao.ts`, usada pelo menu e pela busca).
    - Lançar Nota "em sequência" (Enter lança e continua com o mesmo cliente; lista "Lançadas agora").
    - Restyle das demais páginas com os componentes do design system (`docs/design-system/`).
 3. **Clientes com vários tipos de emissão** na tela de Clientes (`tipos_emissao` já existe no banco; a tela usa só `tipo_emissao`).

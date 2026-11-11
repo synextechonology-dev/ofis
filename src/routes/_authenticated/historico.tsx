@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth } from "date-fns";
@@ -32,7 +32,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type BuscaHistorico = { nf?: string; status?: StatusNota };
+const STATUS_VALIDOS: StatusNota[] = ["autorizada", "cancelada", "denegada"];
+
 export const Route = createFileRoute("/_authenticated/historico")({
+  // ?nf=001234 mostra só essa nota (qualquer data); ?status=denegada já abre filtrado.
+  validateSearch: (s: Record<string, unknown>): BuscaHistorico => {
+    const nf = s["nf"];
+    const st = s["status"];
+    return {
+      ...(typeof nf === "string" && nf.trim() ? { nf: nf.trim() } : {}),
+      ...(STATUS_VALIDOS.includes(st as StatusNota) ? { status: st as StatusNota } : {}),
+    };
+  },
   head: () => ({
     meta: [
       { title: "Histórico — Ofis" },
@@ -55,17 +67,28 @@ const PAGE_SIZE = 20;
 
 function HistoricoPage() {
   const queryClient = useQueryClient();
+  const busca = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const nf = busca.nf;
   const [dataInicio, setDataInicio] = useState(() =>
     format(startOfMonth(new Date()), "yyyy-MM-dd"),
   );
   const [dataFim, setDataFim] = useState(() => format(new Date(), "yyyy-MM-dd"));
-  const [status, setStatus] = useState<"todos" | StatusNota>("todos");
+  const [status, setStatus] = useState<"todos" | StatusNota>(busca.status ?? "todos");
   const [tipo, setTipo] = useState<"todos" | TipoEmissao>("todos");
   const [page, setPage] = useState(0);
 
+  // Vindo da busca geral com outro status, mesmo já estando nesta tela.
+  useEffect(() => {
+    if (busca.status) {
+      setStatus(busca.status);
+      setPage(0);
+    }
+  }, [busca.status]);
+
   const filtros = useMemo(
-    () => ({ dataInicio, dataFim, status, tipo, page }),
-    [dataInicio, dataFim, status, tipo, page],
+    () => ({ dataInicio, dataFim, status, tipo, page, nf }),
+    [dataInicio, dataFim, status, tipo, page, nf],
   );
 
   const { data, isLoading } = useQuery({
@@ -78,8 +101,11 @@ function HistoricoPage() {
         .order("criado_em", { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
-      if (dataInicio) query = query.gte("data_emissao", dataInicio);
-      if (dataFim) query = query.lte("data_emissao", dataFim);
+      if (nf) query = query.eq("numero_nf", nf);
+      else {
+        if (dataInicio) query = query.gte("data_emissao", dataInicio);
+        if (dataFim) query = query.lte("data_emissao", dataFim);
+      }
       if (status !== "todos") query = query.eq("status", status);
       if (tipo !== "todos") query = query.eq("tipo_emissao", tipo);
 
@@ -176,6 +202,18 @@ function HistoricoPage() {
           Consulte e exporte as notas fiscais por período e status.
         </p>
       </header>
+
+      {nf ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card px-4 py-3 text-sm">
+          <span className="text-muted-foreground">
+            Mostrando só a nota <span className="font-mono text-foreground">{nf}</span>, em qualquer
+            data.
+          </span>
+          <Button variant="ghost" size="sm" onClick={() => navigate({ search: {} })}>
+            Ver todas as notas
+          </Button>
+        </div>
+      ) : null}
 
       <Card className="rounded-lg border-border shadow-card">
         <CardContent className="grid gap-4 py-5 md:grid-cols-3 md:items-end lg:grid-cols-5">

@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 import { supabase } from "@/lib/supabase";
 import { AppSidebar } from "@/components/app-sidebar";
+import { BuscaGeral } from "@/components/busca-geral";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -20,6 +21,7 @@ function AuthenticatedLayout() {
       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
         <Outlet />
       </main>
+      <BuscaGeral />
     </div>
   );
 }

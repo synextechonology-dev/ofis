@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth, subDays, differenceInCalendarDays } from "date-fns";
@@ -44,6 +44,11 @@ import {
 } from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
+  // ?busca=nome abre a lista já filtrada (usado pela busca geral, Ctrl+K).
+  validateSearch: (s: Record<string, unknown>): { busca?: string } => {
+    const b = s["busca"];
+    return typeof b === "string" && b.trim() ? { busca: b } : {};
+  },
   head: () => ({
     meta: [
       { title: "Clientes — Ofis" },
@@ -70,7 +75,11 @@ function ClientesPage() {
 
   const [nome, setNome] = useState("");
   const [tipo, setTipo] = useState<TipoEmissao>("comercio");
-  const [busca, setBusca] = useState("");
+  const buscaUrl = Route.useSearch().busca;
+  const [busca, setBusca] = useState(buscaUrl ?? "");
+  useEffect(() => {
+    if (buscaUrl) setBusca(buscaUrl);
+  }, [buscaUrl]);
   const [filtroTipo, setFiltroTipo] = useState<"todos" | TipoEmissao>("todos");
   const [historicoCliente, setHistoricoCliente] = useState<string | null>(null);
 
