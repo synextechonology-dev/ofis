@@ -1,0 +1,304 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter"; /* reserva caso a Geist (Google Fonts, ver __root.tsx) não carregue */
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — Ofis.
+ * Fonte da verdade: docs/design-system/tokens.json (gerado em tokens.css).
+ * Três camadas de cor que NUNCA se misturam:
+ *   1. status (success / warning / destructive)
+ *   2. categoria (tipo-comercio / tipo-servico / tipo-rural)
+ *   3. marca (primary / accent)
+ * Novos tokens: registrar em @theme inline.
+ */
+
+@theme inline {
+  --font-sans: "Geist", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-2xl: 16px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-tipo-comercio: var(--tipo-comercio);
+  --color-tipo-servico: var(--tipo-servico);
+  --color-tipo-rural: var(--tipo-rural);
+  --color-tipo-foreground: var(--tipo-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-row-hover: var(--row-hover);
+  --color-nav-1: var(--nav-1);
+  --color-nav-2: var(--nav-2);
+  --color-nav-3: var(--nav-3);
+  --color-nav-4: var(--nav-4);
+  --color-nav-5: var(--nav-5);
+  --color-nav-6: var(--nav-6);
+  --color-nav-7: var(--nav-7);
+  --color-nav-8: var(--nav-8);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-elevated: 0 12px 32px rgb(0 0 0 / 0.18);
+  --shadow-kpi: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-kpi-hover: 0 8px 20px -8px rgb(0 0 0 / 0.25);
+}
+
+:root {
+  /* Tema CLARO (off-white). O padrão do Ofis é o escuro: classe .dark no <html>. */
+  --radius: 10px;
+  --background: #F4F2EE;
+  --foreground: #18181B;
+  --card: #FAF9F6;
+  --card-foreground: #18181B;
+  --popover: #FAF9F6;
+  --popover-foreground: #18181B;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #1D4ED8;
+  --secondary: #EFEDE8;
+  --secondary-foreground: #18181B;
+  --muted: #EFEDE8;
+  --muted-foreground: #5F5F68;
+  --accent: #E6ECF8;
+  --accent-foreground: #1D4ED8;
+  --destructive: #B91C1C;
+  --destructive-foreground: #FFFFFF;
+  --success: #146C33;
+  --success-foreground: #FFFFFF;
+  --warning: #8A5A06;
+  --warning-foreground: #FFFFFF;
+  /* Camada de CATEGORIA (tipo de emissão) — nunca usar para status nem para marca. */
+  --tipo-comercio: #0E7490;
+  --tipo-servico: #6D28D9;
+  --tipo-rural: #7A621D;
+  --tipo-foreground: #FFFFFF;
+  --border: #E2DFD8;
+  --input: #81818A;
+  --ring: #2563EB;
+  --chart-1: #146C33;
+  --chart-2: #B91C1C;
+  --chart-3: #8A5A06;
+  --chart-4: #2563EB;
+  --chart-5: #A1A1AA;
+  --row-hover: #EFEDE8;
+  /* Ícones do menu: neutros (o design system não usa uma cor por item). */
+  --nav-1: currentColor;
+  --nav-2: currentColor;
+  --nav-3: currentColor;
+  --nav-4: currentColor;
+  --nav-5: currentColor;
+  --nav-6: currentColor;
+  --nav-7: currentColor;
+  --nav-8: currentColor;
+  --sidebar: #EDEBE6;
+  --sidebar-foreground: #18181B;
+  --sidebar-primary: #2563EB;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E2DFD8;
+  --sidebar-accent-foreground: #18181B;
+  --sidebar-border: #E2DFD8;
+  --sidebar-ring: #2563EB;
+  --gradient-sidebar: linear-gradient(var(--sidebar), var(--sidebar));
+}
+
+.dark {
+  /* Tema ESCURO — padrão do Ofis. */
+  --background: #161618;
+  --foreground: #F4F4F5;
+  --card: #1C1C1F;
+  --card-foreground: #F4F4F5;
+  --popover: #242428;
+  --popover-foreground: #F4F4F5;
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #1D4ED8;
+  --secondary: #242428;
+  --secondary-foreground: #F4F4F5;
+  --muted: #242428;
+  --muted-foreground: #8F8F98;
+  --accent: #172338;
+  --accent-foreground: #7DB2FF;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --success: #4ADE80;
+  --success-foreground: #0B1A10;
+  --warning: #FBBF24;
+  --warning-foreground: #1A1405;
+  --tipo-comercio: #67D4E6;
+  --tipo-servico: #BBA8FF;
+  --tipo-rural: #D8C38E;
+  --tipo-foreground: #101012;
+  --border: #2A2A2E;
+  --input: #75757E;
+  --ring: #7DB2FF;
+  --chart-1: #4ADE80;
+  --chart-2: #F87171;
+  --chart-3: #FBBF24;
+  --chart-4: #2563EB;
+  --chart-5: #5C5C63;
+  --row-hover: #202024;
+  --sidebar: #101012;
+  --sidebar-foreground: #F4F4F5;
+  --sidebar-primary: #7DB2FF;
+  --sidebar-primary-foreground: #101012;
+  --sidebar-accent: #1C1C1F;
+  --sidebar-accent-foreground: #F4F4F5;
+  --sidebar-border: #2A2A2E;
+  --sidebar-ring: #7DB2FF;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Barras de rolagem discretas, no tom do tema. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Números alinhados (valores, NF, datas). */
+@utility nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rolagem sem barra visível (menu lateral). */
+@utility scroll-oculto {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes block-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility sidebar-gradient {
+  background-image: var(--gradient-sidebar);
+}
+
+@utility hover-lift {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-kpi-hover);
+  }
+}
+
+@utility block-in {
+  animation: block-in 0.35s ease-out both;
+}
+
+@utility row-in {
+  animation: row-in 0.25s ease-out both;
+}
+
+@utility strike-anim {
+  position: relative;
+  transition: color 0.2s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 55%;
+    height: 1.5px;
+    width: 0;
+    background-color: currentColor;
+    transition: width 0.3s ease;
+  }
+
+  &.is-done::after {
+    width: 100%;
+  }
+}

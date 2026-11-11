@@ -1,0 +1,191 @@
+/* Ofis — gerado a partir de tokens.json */
+:root, [data-theme="dark"] {
+  --bg-sunken: #101012;
+  --bg-base: #161618;
+  --surface: #1C1C1F;
+  --surface-raised: #242428;
+  --surface-hover: #202024;
+  --border-subtle: #2A2A2E;
+  --border-control: #75757E;
+  --text-primary: #F4F4F5;
+  --text-secondary: #B4B4BC;
+  --text-muted: #8F8F98;
+  --text-disabled: #5C5C63;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --on-accent: #FFFFFF;
+  --accent-text: #7DB2FF;
+  --accent-soft: #172338;
+  --focus-ring: #7DB2FF;
+  --success: #4ADE80;
+  --success-soft: #132A1C;
+  --warning: #FBBF24;
+  --warning-soft: #2D2410;
+  --danger: #F87171;
+  --danger-soft: #331818;
+  --danger-fill: #DC2626;
+  --cat-comercio: #67D4E6;
+  --cat-comercio-soft: #11292E;
+  --cat-servico: #BBA8FF;
+  --cat-servico-soft: #221E36;
+  --cat-rural: #D8C38E;
+  --cat-rural-soft: #2A2618;
+  --chart-bar: #2E2E33;
+  --chart-grid: #26262A;
+  --chart-highlight: var(--accent);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+[data-theme="light"] {
+  --bg-sunken: #EDEBE6;
+  --bg-base: #F4F2EE;
+  --surface: #FAF9F6;
+  --surface-raised: #EFEDE8;
+  --surface-hover: #F4F2EE;
+  --border-subtle: #E2DFD8;
+  --border-control: #81818A;
+  --text-primary: #18181B;
+  --text-secondary: #3F3F46;
+  --text-muted: #5F5F68;
+  --text-disabled: #A1A1AA;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --on-accent: #FFFFFF;
+  --accent-text: #1D4ED8;
+  --accent-soft: #E6ECF8;
+  --focus-ring: #2563EB;
+  --success: #146C33;
+  --success-soft: #E4F1E6;
+  --warning: #8A5A06;
+  --warning-soft: #F8EFD9;
+  --danger: #B91C1C;
+  --danger-soft: #F8E8E6;
+  --danger-fill: #DC2626;
+  --cat-comercio: #0E7490;
+  --cat-comercio-soft: #E0EFF1;
+  --cat-servico: #6D28D9;
+  --cat-servico-soft: #ECE7F8;
+  --cat-rural: #7A621D;
+  --cat-rural-soft: #F1EBDB;
+  --chart-bar: #E2DFD8;
+  --chart-grid: #EAE7E1;
+  --chart-highlight: var(--accent);
+  --overlay: rgba(24, 24, 27, 0.4);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadow-float: 0 12px 32px rgba(24, 24, 27, 0.12);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+  --control-height: 40px;
+  --control-height-sm: 32px;
+  --row-height: 48px;
+  --sidebar-width: 248px;
+  --content-max: 1280px;
+  --form-max: 720px;
+  --font-sans: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+.display {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.h1 {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+.h2 {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.h3 {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.h4 {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.highlight {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.body-secondary {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.overline {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+.button {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.numeric {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+  letter-spacing: 0;
+}

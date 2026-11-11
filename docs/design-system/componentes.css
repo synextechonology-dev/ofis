@@ -1,0 +1,218 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap");
+
+/* Ofis — component styles. Every value comes from tokens.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+}
+.nf-num { font-variant-numeric: tabular-nums; }
+.nf-mono { font-family: var(--font-mono); font-size: 13px; }
+.nf-muted { color: var(--text-muted); }
+.nf-secondary { color: var(--text-secondary); }
+
+/* ---------- Focus (global) ---------- */
+.nf-btn:focus-visible, .nf-input:focus-visible, .nf-select:focus-visible, .nf-textarea:focus-visible,
+.nf-link:focus-visible, .nf-nav-item:focus-visible, .nf-seg button:focus-visible, .nf-icon-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Button ---------- */
+.nf-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: var(--control-height); padding: 0 var(--space-4);
+  border-radius: var(--radius-md); border: 1px solid transparent;
+  font: 500 14px/20px var(--font-sans); white-space: nowrap; cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.nf-btn svg { width: 16px; height: 16px; flex: none; }
+.nf-btn--sm { height: var(--control-height-sm); padding: 0 var(--space-3); font-size: 13px; }
+.nf-btn--primary { background: var(--accent); color: var(--on-accent); }
+.nf-btn--primary:hover { background: var(--accent-hover); }
+.nf-btn--primary:active { background: var(--accent-hover); transform: translateY(1px); }
+.nf-btn--secondary { background: var(--surface-raised); color: var(--text-primary); border-color: var(--border-subtle); box-shadow: var(--shadow-inset); }
+.nf-btn--secondary:hover { border-color: var(--border-control); }
+.nf-btn--secondary:active { background: var(--surface-hover); }
+.nf-btn--ghost { background: transparent; color: var(--text-secondary); }
+.nf-btn--ghost:hover { background: var(--surface-raised); color: var(--text-primary); }
+.nf-btn--danger { background: transparent; color: var(--danger); border-color: var(--border-subtle); }
+.nf-btn--danger:hover { background: var(--danger-soft); }
+.nf-btn--danger-solid { background: var(--danger-fill); color: var(--on-accent); }
+.nf-btn:disabled, .nf-btn[aria-disabled="true"] {
+  background: var(--surface-raised); color: var(--text-disabled); border-color: transparent;
+  box-shadow: none; cursor: not-allowed; transform: none;
+}
+.nf-icon-btn {
+  display: inline-grid; place-items: center; width: var(--control-height-sm); height: var(--control-height-sm);
+  border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--surface-raised);
+  color: var(--text-secondary); cursor: pointer;
+}
+.nf-icon-btn:hover { color: var(--text-primary); border-color: var(--border-control); }
+.nf-icon-btn svg { width: 16px; height: 16px; }
+
+/* ---------- Link ---------- */
+.nf-link { color: var(--accent-text); font-weight: 500; text-decoration: none; border-radius: 4px; }
+.nf-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Fields ---------- */
+.nf-field { display: flex; flex-direction: column; gap: 6px; }
+.nf-label { font: 500 12px/16px var(--font-sans); letter-spacing: .01em; color: var(--text-secondary); }
+.nf-hint { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.nf-error { font-size: 12px; line-height: 16px; color: var(--danger); }
+.nf-input, .nf-select, .nf-textarea {
+  width: 100%; height: var(--control-height); padding: 0 var(--space-3);
+  background: var(--bg-base); color: var(--text-primary);
+  border: 1px solid var(--border-control); border-radius: var(--radius-md);
+  font: 400 14px/20px var(--font-sans);
+  transition: border-color .15s ease;
+}
+.nf-textarea { height: auto; min-height: 88px; padding: 10px var(--space-3); resize: vertical; }
+.nf-input::placeholder, .nf-textarea::placeholder { color: var(--text-muted); }
+.nf-input:hover, .nf-select:hover, .nf-textarea:hover { border-color: var(--text-muted); }
+.nf-input:focus-visible, .nf-select:focus-visible, .nf-textarea:focus-visible { border-color: var(--focus-ring); outline-offset: 0; outline-width: 1px; }
+.nf-input[aria-invalid="true"] { border-color: var(--danger); }
+.nf-input:disabled, .nf-select:disabled, .nf-textarea:disabled { background: var(--surface-raised); color: var(--text-disabled); border-color: var(--border-subtle); cursor: not-allowed; }
+.nf-select {
+  appearance: none; padding-right: 36px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px; background-repeat: no-repeat;
+}
+
+/* ---------- Card ---------- */
+.nf-card {
+  background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-inset); padding: var(--space-6);
+}
+.nf-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.nf-card__title { display: flex; align-items: center; gap: var(--space-3); font: 600 18px/26px var(--font-sans); letter-spacing: -.01em; margin: 0; }
+.nf-card__icon {
+  display: grid; place-items: center; width: 36px; height: 36px; flex: none;
+  border-radius: var(--radius-md); background: var(--surface-raised); border: 1px solid var(--border-subtle); color: var(--text-secondary);
+}
+.nf-card__icon svg { width: 18px; height: 18px; }
+.nf-tile { background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+
+/* ---------- KPI ---------- */
+.nf-kpi__label { font: 500 13px/18px var(--font-sans); color: var(--text-secondary); }
+.nf-kpi__value { font: 600 32px/40px var(--font-sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; margin-top: var(--space-3); }
+.nf-kpi__foot { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.nf-delta { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px; border-radius: var(--radius-full); font: 500 12px/16px var(--font-sans); font-variant-numeric: tabular-nums; }
+.nf-delta--up { background: var(--success-soft); color: var(--success); }
+.nf-delta--down { background: var(--danger-soft); color: var(--danger); }
+.nf-delta--flat { background: var(--surface-raised); color: var(--text-secondary); }
+
+/* ---------- Status badge (pill + dot) ---------- */
+.nf-badge {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px 0 7px;
+  border-radius: var(--radius-full); font: 500 12px/16px var(--font-sans); white-space: nowrap;
+}
+.nf-badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.nf-badge--success { background: var(--success-soft); color: var(--success); }
+.nf-badge--warning { background: var(--warning-soft); color: var(--warning); }
+.nf-badge--danger { background: var(--danger-soft); color: var(--danger); }
+.nf-badge--neutral { background: var(--surface-raised); color: var(--text-secondary); }
+.nf-badge--info { background: var(--accent-soft); color: var(--accent-text); }
+
+/* ---------- Category tag (square + label) ---------- */
+.nf-tag {
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 7px;
+  border-radius: var(--radius-sm); font: 500 12px/16px var(--font-sans); white-space: nowrap;
+  border: 1px solid transparent;
+}
+.nf-tag::before { content: ""; width: 6px; height: 6px; border-radius: 1.5px; background: currentColor; }
+.nf-tag--comercio { background: var(--cat-comercio-soft); color: var(--cat-comercio); }
+.nf-tag--servico { background: var(--cat-servico-soft); color: var(--cat-servico); }
+.nf-tag--rural { background: var(--cat-rural-soft); color: var(--cat-rural); }
+.nf-tag--plain { background: transparent; color: var(--text-secondary); border-color: var(--border-subtle); }
+.nf-tag--plain::before { display: none; }
+
+/* ---------- Table ---------- */
+.nf-table-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.nf-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; }
+.nf-table th {
+  text-align: left; padding: 10px var(--space-4); background: var(--surface-raised);
+  font: 500 12px/16px var(--font-sans); letter-spacing: .01em; color: var(--text-muted); white-space: nowrap;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.nf-table td { height: var(--row-height); padding: 0 var(--space-4); color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+.nf-table tr:last-child td { border-bottom: 0; }
+.nf-table tbody tr:hover td { background: var(--surface-hover); }
+.nf-table tbody tr[aria-selected="true"] td { background: var(--accent-soft); }
+.nf-table .is-primary { color: var(--text-primary); font-weight: 500; }
+.nf-table .is-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.nf-table th.is-num { text-align: right; color: var(--text-muted); }
+
+/* ---------- Segmented control ---------- */
+.nf-seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--bg-base); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.nf-seg button {
+  height: 26px; padding: 0 10px; border: 0; border-radius: var(--radius-sm); background: transparent;
+  color: var(--text-muted); font: 500 12px/16px var(--font-sans); cursor: pointer;
+}
+.nf-seg button:hover { color: var(--text-primary); }
+.nf-seg button[aria-pressed="true"] { background: var(--surface-raised); color: var(--text-primary); box-shadow: var(--shadow-inset); }
+
+/* ---------- Sidebar ---------- */
+.nf-sidebar { width: var(--sidebar-width); background: var(--bg-sunken); border-right: 1px solid var(--border-subtle); padding: var(--space-4) var(--space-3); display: flex; flex-direction: column; gap: var(--space-4); }
+.nf-brand { display: flex; align-items: center; gap: 10px; padding: var(--space-1) var(--space-2) var(--space-2); font: 600 17px/24px var(--font-sans); letter-spacing: -.01em; }
+.nf-brand__mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--radius-md); background: var(--accent); color: var(--on-accent); }
+.nf-brand__mark svg { width: 16px; height: 16px; }
+.nf-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nf-nav-title { font: 500 11px/16px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); padding: 0 var(--space-3) 6px; }
+.nf-nav-item {
+  position: relative; display: flex; align-items: center; gap: var(--space-3); height: 38px; padding: 0 var(--space-3);
+  border-radius: var(--radius-md); color: var(--text-secondary); text-decoration: none; font: 500 14px/20px var(--font-sans);
+  border: 1px solid transparent;
+}
+.nf-nav-item svg { width: 18px; height: 18px; flex: none; color: var(--text-muted); }
+.nf-nav-item:hover { background: var(--surface); color: var(--text-primary); }
+.nf-nav-item[aria-current="page"] { background: var(--surface-raised); border-color: var(--border-subtle); color: var(--text-primary); box-shadow: var(--shadow-inset); }
+.nf-nav-item[aria-current="page"] svg { color: var(--accent-text); }
+.nf-nav-item[aria-current="page"]::after { content: ""; position: absolute; right: -1px; top: 9px; bottom: 9px; width: 3px; border-radius: 3px 0 0 3px; background: var(--accent-text); }
+.nf-nav-count { margin-left: auto; min-width: 22px; height: 20px; padding: 0 6px; border-radius: var(--radius-full); background: var(--surface-raised); color: var(--text-secondary); font: 500 12px/20px var(--font-sans); text-align: center; font-variant-numeric: tabular-nums; }
+
+/* ---------- Page header ---------- */
+.nf-page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.nf-page-head h1 { margin: 0; font: 600 24px/32px var(--font-sans); letter-spacing: -.015em; }
+.nf-page-head p { margin: 4px 0 0; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.nf-page-head__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+/* ---------- Empty state ---------- */
+.nf-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-2); padding: var(--space-12) var(--space-6); border: 1px dashed var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface); }
+.nf-empty__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--surface-raised); border: 1px solid var(--border-subtle); color: var(--text-muted); margin-bottom: var(--space-2); }
+.nf-empty__icon svg { width: 20px; height: 20px; }
+.nf-empty h3 { margin: 0; font: 600 15px/22px var(--font-sans); }
+.nf-empty p { margin: 0 0 var(--space-2); max-width: 360px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+
+/* ---------- Progress meter (MEI) ---------- */
+.nf-meter { height: 8px; border-radius: var(--radius-full); background: var(--surface-raised); overflow: hidden; }
+.nf-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--success); }
+.nf-meter--warning > span { background: var(--warning); }
+.nf-meter--danger > span { background: var(--danger); }
+
+/* ---------- Alert ---------- */
+.nf-alert { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); background: var(--surface); }
+.nf-alert svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.nf-alert strong { display: block; font-weight: 600; color: var(--text-primary); }
+.nf-alert span { color: var(--text-secondary); font-size: 13px; line-height: 18px; }
+.nf-alert--warning { background: var(--warning-soft); border-color: transparent; }
+.nf-alert--warning svg { color: var(--warning); }
+.nf-alert--danger { background: var(--danger-soft); border-color: transparent; }
+.nf-alert--danger svg { color: var(--danger); }
+
+/* ---------- Chart ---------- */
+.nf-chart .bar { fill: var(--chart-bar); }
+.nf-chart .bar.is-current { fill: var(--chart-highlight); }
+.nf-chart .grid { stroke: var(--chart-grid); stroke-width: 1; }
+.nf-chart text { fill: var(--text-muted); font: 500 12px var(--font-sans); }
+.nf-chart text.is-current { fill: var(--text-primary); }
+.nf-chart-tip { position: absolute; padding: 8px 10px; border-radius: var(--radius-md); background: var(--surface-raised); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-float); }
+.nf-chart-tip small { display: block; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.nf-chart-tip b { font-weight: 600; font-variant-numeric: tabular-nums; }

@@ -1,0 +1,2978 @@
+diff --git a/src/components/app-sidebar.tsx b/src/components/app-sidebar.tsx
+index d3a0d12..bc86a67 100644
+--- a/src/components/app-sidebar.tsx
++++ b/src/components/app-sidebar.tsx
+@@ -4,9 +4,11 @@ import {
+   LayoutDashboard,
+   Users,
+   FilePlus2,
++  FileText,
+   CalendarDays,
+   History,
+   BarChart3,
++  Gauge,
+   LogOut,
+   Menu,
+   X,
+@@ -15,11 +17,19 @@ import {
+   TrendingUp,
+   FileCheck,
+   MessageSquare,
++  UserPlus,
++  PanelLeftClose,
++  PanelLeftOpen,
++  Moon,
++  Sun,
++  type LucideIcon,
+ } from "lucide-react";
+ import { useQueryClient } from "@tanstack/react-query";
+ 
+ import { supabase } from "@/lib/supabase";
++import { useTema } from "@/lib/tema";
+ import { cn } from "@/lib/utils";
++import type { FileRoutesByTo } from "@/routeTree.gen";
+ import { Button } from "@/components/ui/button";
+ import {
+   Tooltip,
+@@ -28,40 +38,96 @@ import {
+   TooltipTrigger,
+ } from "@/components/ui/tooltip";
+ 
+-const NAV = [
+-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, color: "text-nav-1" },
+-  { to: "/mei", label: "MEI", icon: TrendingUp, color: "text-nav-6" },
+-  { to: "/clientes", label: "Clientes", icon: Users, color: "text-nav-7" },
+-  { to: "/lancar-nota", label: "Lançar Nota", icon: FilePlus2, color: "text-nav-2" },
+-  { to: "/tarefas", label: "Tarefas do Dia", icon: ClipboardList, color: "text-nav-6" },
+-  { to: "/comunicacoes", label: "Comunicações", icon: MessageSquare, color: "text-nav-3" },
+-  { to: "/notas-do-dia", label: "Notas do Dia", icon: CalendarDays, color: "text-nav-3" },
+-  { to: "/historico", label: "Histórico", icon: History, color: "text-nav-5" },
+-  { to: "/calendario", label: "Calendário", icon: CalendarDays, color: "text-nav-8" },
+-  { to: "/obrigacoes", label: "Obrigações", icon: FileCheck, color: "text-nav-4" },
+-  { to: "/rentabilidade", label: "Rentabilidade", icon: BarChart3, color: "text-nav-5" },
+-  { to: "/analises", label: "Análises", icon: BarChart3, color: "text-nav-4" },
+-] as const;
++type ItemNav = { to: keyof FileRoutesByTo; label: string; icon: LucideIcon };
+ 
++/** Menu agrupado por tarefa do dia a dia (mesma organização da prévia). */
++const GRUPOS: { titulo: string; itens: ItemNav[] }[] = [
++  {
++    titulo: "Operação",
++    itens: [
++      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
++      { to: "/notas-do-dia", label: "Notas do Dia", icon: FileText },
++      { to: "/lancar-nota", label: "Lançar Nota", icon: FilePlus2 },
++      { to: "/tarefas", label: "Tarefas do Dia", icon: ClipboardList },
++      { to: "/comunicacoes", label: "Comunicações", icon: MessageSquare },
++    ],
++  },
++  {
++    titulo: "Clientes",
++    itens: [
++      { to: "/clientes", label: "Clientes", icon: Users },
++      { to: "/mei", label: "Controle MEI", icon: TrendingUp },
++      { to: "/esporadicos", label: "Esporádicos", icon: UserPlus },
++    ],
++  },
++  {
++    titulo: "Fiscal",
++    itens: [
++      { to: "/calendario", label: "Calendário", icon: CalendarDays },
++      { to: "/obrigacoes", label: "Obrigações", icon: FileCheck },
++      { to: "/historico", label: "Histórico", icon: History },
++    ],
++  },
++  {
++    titulo: "Análises",
++    itens: [
++      { to: "/analises", label: "Análises", icon: BarChart3 },
++      { to: "/rentabilidade", label: "Rentabilidade", icon: Gauge },
++    ],
++  },
++];
++
++const CHAVE_RECOLHIDO = "ofis-menu-recolhido";
+ 
+ function iniciais(email: string) {
+   const nome = email.split("@")[0] ?? "";
+   const partes = nome.split(/[._-]+/).filter(Boolean);
+   if (partes.length >= 2) return (partes[0]![0]! + partes[1]![0]!).toUpperCase();
+-  return nome.slice(0, 2).toUpperCase() || "NF";
++  return nome.slice(0, 2).toUpperCase() || "OF";
+ }
+ 
+ export function AppSidebar() {
+   const [open, setOpen] = useState(false);
++  const [recolhido, setRecolhido] = useState(false);
+   const [email, setEmail] = useState("");
+   const navigate = useNavigate();
+   const queryClient = useQueryClient();
++  const { tema, setTema } = useTema();
+ 
+   useEffect(() => {
+     setOpen(false);
+     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
++    try {
++      setRecolhido(localStorage.getItem(CHAVE_RECOLHIDO) === "1");
++    } catch {
++      // sem armazenamento: menu começa aberto
++    }
+   }, []);
+ 
++  // Atalho: Ctrl/Cmd + B recolhe ou abre o menu.
++  useEffect(() => {
++    function onKey(e: KeyboardEvent) {
++      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
++        e.preventDefault();
++        alternarRecolhido();
++      }
++    }
++    window.addEventListener("keydown", onKey);
++    return () => window.removeEventListener("keydown", onKey);
++  });
++
++  function alternarRecolhido() {
++    setRecolhido((v) => {
++      const novo = !v;
++      try {
++        localStorage.setItem(CHAVE_RECOLHIDO, novo ? "1" : "0");
++      } catch {
++        // ignora
++      }
++      return novo;
++    });
++  }
++
+   async function handleLogout() {
+     await queryClient.cancelQueries();
+     queryClient.clear();
+@@ -69,54 +135,161 @@ export function AppSidebar() {
+     navigate({ to: "/auth", replace: true });
+   }
+ 
+-  const content = (
++  const conteudo = (compacto: boolean) => (
+     <TooltipProvider delayDuration={250}>
+-      <div className="sidebar-gradient flex h-full flex-col text-sidebar-foreground">
+-        <div className="flex items-center gap-2 border-b border-sidebar-border/70 px-5 py-5">
+-          <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary/15">
+-            <ReceiptText className="size-4.5" />
+-          </div>
+-          <span className="text-lg font-bold tracking-tight">NF Gestão</span>
++      <div className="flex h-full flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
++        <div
++          className={cn(
++            "flex h-16 items-center gap-2 px-4",
++            compacto ? "justify-center" : "justify-between",
++          )}
++        >
++          {!compacto && (
++            <div className="flex items-center gap-2.5">
++              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
++                <ReceiptText className="size-4" />
++              </div>
++              <span className="text-lg font-semibold tracking-tight">Ofis</span>
++            </div>
++          )}
++          <Tooltip>
++            <TooltipTrigger asChild>
++              <Button
++                variant="ghost"
++                size="icon"
++                className="hidden size-8 text-sidebar-foreground/70 hover:bg-sidebar-accent md:inline-flex"
++                onClick={alternarRecolhido}
++                aria-label={compacto ? "Expandir menu" : "Recolher menu"}
++                aria-expanded={!compacto}
++              >
++                {compacto ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
++              </Button>
++            </TooltipTrigger>
++            <TooltipContent side="right">
++              {compacto ? "Expandir menu" : "Recolher menu"} (Ctrl+B)
++            </TooltipContent>
++          </Tooltip>
+         </div>
+ 
+-        <div className="flex items-center gap-3 border-b border-sidebar-border/70 px-5 py-4">
+-          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/20 text-sm font-bold">
+-            {email ? iniciais(email) : "··"}
+-          </div>
+-          <div className="min-w-0">
+-            <p className="truncate text-sm font-semibold">{email ? email.split("@")[0] : "Usuário"}</p>
+-            <p className="truncate text-xs text-sidebar-foreground/60">{email || "Setor fiscal"}</p>
+-          </div>
+-        </div>
++        <nav className="scroll-oculto flex-1 overflow-y-auto px-3 pb-3" aria-label="Menu principal">
++          {GRUPOS.map((grupo) => (
++            <div key={grupo.titulo} className="mt-3 first:mt-1">
++              {compacto ? (
++                <div className="mx-2 my-2 h-px bg-sidebar-border first:hidden" />
++              ) : (
++                <p className="px-3 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/50">
++                  {grupo.titulo}
++                </p>
++              )}
++              <ul className="space-y-0.5">
++                {grupo.itens.map((item) => {
++                  const link = (
++                    <Link
++                      to={item.to}
++                      onClick={() => setOpen(false)}
++                      aria-label={compacto ? item.label : undefined}
++                      className={cn(
++                        "relative flex h-9 items-center gap-3 rounded-md text-sm font-medium text-sidebar-foreground/75 transition-colors",
++                        "hover:bg-sidebar-accent hover:text-sidebar-foreground",
++                        "data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-foreground",
++                        "data-[status=active]:after:absolute data-[status=active]:after:inset-y-2 data-[status=active]:after:right-0 data-[status=active]:after:w-0.5 data-[status=active]:after:rounded-full data-[status=active]:after:bg-sidebar-primary",
++                        compacto ? "justify-center px-0" : "px-3",
++                      )}
++                    >
++                      <item.icon className="size-4 shrink-0" />
++                      {!compacto && <span className="truncate">{item.label}</span>}
++                    </Link>
++                  );
++                  return (
++                    <li key={item.to}>
++                      {compacto ? (
++                        <Tooltip>
++                          <TooltipTrigger asChild>{link}</TooltipTrigger>
++                          <TooltipContent side="right">{item.label}</TooltipContent>
++                        </Tooltip>
++                      ) : (
++                        link
++                      )}
++                    </li>
++                  );
++                })}
++              </ul>
++            </div>
++          ))}
++        </nav>
+ 
+-        <nav className="flex-1 space-y-1 p-3">
+-          {NAV.map((item) => (
+-            <Tooltip key={item.to}>
++        <div className="space-y-2 border-t border-sidebar-border p-3">
++          {compacto ? (
++            <Tooltip>
+               <TooltipTrigger asChild>
+-                <Link
+-                  to={item.to}
+-                  onClick={() => setOpen(false)}
+-                  className="group relative flex items-center gap-3 overflow-hidden rounded-md px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-all hover:bg-sidebar-primary/10 hover:text-sidebar-accent-foreground data-[status=active]:bg-sidebar-primary/15 data-[status=active]:text-sidebar-accent-foreground data-[status=active]:before:absolute data-[status=active]:before:inset-y-1.5 data-[status=active]:before:left-0 data-[status=active]:before:w-1 data-[status=active]:before:rounded-full data-[status=active]:before:bg-current"
++                <Button
++                  variant="ghost"
++                  size="icon"
++                  className="mx-auto flex size-9 text-sidebar-foreground/75 hover:bg-sidebar-accent"
++                  onClick={() => setTema(tema === "escuro" ? "claro" : "escuro")}
++                  aria-label={tema === "escuro" ? "Usar tema claro" : "Usar tema escuro"}
+                 >
+-                  <item.icon
+-                    className={cn("size-4.5 transition-transform group-hover:scale-110", item.color)}
+-                  />
+-                  {item.label}
+-                </Link>
++                  {tema === "escuro" ? <Sun className="size-4" /> : <Moon className="size-4" />}
++                </Button>
+               </TooltipTrigger>
+-              <TooltipContent side="right">{item.label}</TooltipContent>
++              <TooltipContent side="right">
++                {tema === "escuro" ? "Tema claro" : "Tema escuro"}
++              </TooltipContent>
+             </Tooltip>
+-          ))}
+-        </nav>
++          ) : (
++            <div
++              className="grid grid-cols-2 gap-1 rounded-lg border border-sidebar-border p-1"
++              role="group"
++              aria-label="Tema"
++            >
++              {(["escuro", "claro"] as const).map((t) => (
++                <button
++                  key={t}
++                  type="button"
++                  aria-pressed={tema === t}
++                  onClick={() => setTema(t)}
++                  className={cn(
++                    "flex h-7 items-center justify-center gap-1.5 rounded-md text-xs font-medium text-sidebar-foreground/60 transition-colors",
++                    "aria-pressed:bg-sidebar-accent aria-pressed:text-sidebar-foreground",
++                  )}
++                >
++                  {t === "escuro" ? <Moon className="size-3.5" /> : <Sun className="size-3.5" />}
++                  {t === "escuro" ? "Escuro" : "Claro"}
++                </button>
++              ))}
++            </div>
++          )}
+ 
+-        <div className="border-t border-sidebar-border/70 p-3">
+-          <button
+-            onClick={handleLogout}
+-            className="group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-primary/10 hover:text-sidebar-accent-foreground"
+-          >
+-            <LogOut className="size-4.5 text-destructive transition-transform group-hover:scale-110" />
+-            Sair
+-          </button>
++          <div className={cn("flex items-center gap-2.5", compacto ? "flex-col" : "px-1")}>
++            <div
++              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold"
++              title={email}
++            >
++              {email ? iniciais(email) : "··"}
++            </div>
++            {!compacto && (
++              <div className="min-w-0 flex-1">
++                <p className="truncate text-sm font-medium">
++                  {email ? email.split("@")[0] : "Usuário"}
++                </p>
++                <p className="truncate text-xs text-sidebar-foreground/55">{email || "Setor fiscal"}</p>
++              </div>
++            )}
++            <Tooltip>
++              <TooltipTrigger asChild>
++                <Button
++                  variant="ghost"
++                  size="icon"
++                  className="size-8 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-destructive"
++                  onClick={handleLogout}
++                  aria-label="Sair"
++                >
++                  <LogOut className="size-4" />
++                </Button>
++              </TooltipTrigger>
++              <TooltipContent side="right">Sair</TooltipContent>
++            </Tooltip>
++          </div>
+         </div>
+       </div>
+     </TooltipProvider>
+@@ -125,22 +298,35 @@ export function AppSidebar() {
+   return (
+     <>
+       {/* Desktop */}
+-      <aside className="hidden w-64 shrink-0 md:block">
+-        <div className="fixed inset-y-0 left-0 w-64">{content}</div>
++      <aside
++        className={cn(
++          "hidden shrink-0 transition-[width] duration-200 md:block",
++          recolhido ? "w-[72px]" : "w-[248px]",
++        )}
++      >
++        <div
++          className={cn(
++            "fixed inset-y-0 left-0 z-20 transition-[width] duration-200",
++            recolhido ? "w-[72px]" : "w-[248px]",
++          )}
++        >
++          {conteudo(recolhido)}
++        </div>
+       </aside>
+ 
+       {/* Mobile */}
+-      <header className="sidebar-gradient sticky top-0 z-30 flex items-center gap-2 border-b border-sidebar-border/70 px-4 py-3 text-sidebar-foreground md:hidden">
++      <header className="sticky top-0 z-30 flex items-center gap-2 border-b border-sidebar-border bg-sidebar px-4 py-3 text-sidebar-foreground md:hidden">
+         <Button
+           variant="ghost"
+           size="icon"
+-          className="text-sidebar-foreground hover:bg-sidebar-primary/15 hover:text-sidebar-accent-foreground"
++          className="text-sidebar-foreground hover:bg-sidebar-accent"
+           onClick={() => setOpen((v) => !v)}
+-          aria-label="Abrir menu"
++          aria-label={open ? "Fechar menu" : "Abrir menu"}
++          aria-expanded={open}
+         >
+           {open ? <X /> : <Menu />}
+         </Button>
+-        <span className="font-bold">NF Gestão</span>
++        <span className="font-semibold">Ofis</span>
+       </header>
+       <div
+         className={cn(
+@@ -150,18 +336,18 @@ export function AppSidebar() {
+       >
+         <div
+           className={cn(
+-            "absolute inset-0 bg-foreground/40 transition-opacity",
++            "absolute inset-0 bg-black/50 transition-opacity",
+             open ? "opacity-100" : "opacity-0",
+           )}
+           onClick={() => setOpen(false)}
+         />
+         <div
+           className={cn(
+-            "absolute inset-y-0 left-0 w-64 shadow-elevated transition-transform",
++            "absolute inset-y-0 left-0 w-[248px] shadow-elevated transition-transform",
+             open ? "translate-x-0" : "-translate-x-full",
+           )}
+         >
+-          {content}
++          {conteudo(false)}
+         </div>
+       </div>
+     </>
+diff --git a/src/components/status-badge.tsx b/src/components/status-badge.tsx
+index 8eace0f..6b32a5a 100644
+--- a/src/components/status-badge.tsx
++++ b/src/components/status-badge.tsx
+@@ -1,21 +1,28 @@
+-import { Badge } from "@/components/ui/badge";
+ import { cn } from "@/lib/utils";
+ import type { StatusNota } from "@/lib/supabase";
+ 
++/**
++ * Camada de STATUS do design system: pílula com ponto redondo, fundo suave e texto
++ * na mesma cor. Nunca texto branco sobre cor chapada.
++ */
+ const MAP: Record<StatusNota, { label: string; className: string }> = {
+-  autorizada: { label: "Autorizada", className: "bg-success text-success-foreground" },
+-  cancelada: { label: "Cancelada", className: "bg-destructive text-destructive-foreground" },
+-  denegada: { label: "Denegada", className: "bg-warning text-warning-foreground" },
++  autorizada: { label: "Autorizada", className: "bg-success/12 text-success" },
++  cancelada: { label: "Cancelada", className: "bg-destructive/12 text-destructive" },
++  denegada: { label: "Denegada", className: "bg-warning/12 text-warning" },
+ };
+ 
+-export function StatusBadge({ status }: { status: StatusNota }) {
+-  const item = MAP[status] ?? {
+-    label: status,
+-    className: "bg-muted text-muted-foreground",
+-  };
++export function StatusBadge({ status, className }: { status: StatusNota; className?: string }) {
++  const item = MAP[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
+   return (
+-    <Badge className={cn("rounded-md border-transparent font-medium", item.className)}>
++    <span
++      className={cn(
++        "inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-xs font-medium",
++        item.className,
++        className,
++      )}
++    >
++      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+       {item.label}
+-    </Badge>
++    </span>
+   );
+ }
+diff --git a/src/components/tipo-badge.tsx b/src/components/tipo-badge.tsx
+index 10066a9..13c830c 100644
+--- a/src/components/tipo-badge.tsx
++++ b/src/components/tipo-badge.tsx
+@@ -1,18 +1,28 @@
+-import { Badge } from "@/components/ui/badge";
+ import { cn } from "@/lib/utils";
+ import type { TipoEmissao } from "@/lib/supabase";
+ 
++/**
++ * Camada de CATEGORIA do design system: canto reto e ponto quadrado, para não ser
++ * confundida com status (pílula e ponto redondo).
++ */
+ const MAP: Record<TipoEmissao, { label: string; className: string }> = {
+-  comercio: { label: "Comércio", className: "bg-tipo-comercio text-tipo-foreground" },
+-  servico: { label: "Serviço", className: "bg-tipo-servico text-tipo-foreground" },
+-  rural: { label: "Rural", className: "bg-tipo-rural text-tipo-foreground" },
++  comercio: { label: "Comércio", className: "bg-tipo-comercio/12 text-tipo-comercio" },
++  servico: { label: "Serviço", className: "bg-tipo-servico/12 text-tipo-servico" },
++  rural: { label: "Rural", className: "bg-tipo-rural/12 text-tipo-rural" },
+ };
+ 
+-export function TipoBadge({ tipo }: { tipo: TipoEmissao }) {
++export function TipoBadge({ tipo, className }: { tipo: TipoEmissao; className?: string }) {
+   const item = MAP[tipo] ?? { label: tipo, className: "bg-muted text-muted-foreground" };
+   return (
+-    <Badge className={cn("rounded-md border-transparent font-medium", item.className)}>
++    <span
++      className={cn(
++        "inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-[4px] px-2 text-xs font-medium",
++        item.className,
++        className,
++      )}
++    >
++      <span aria-hidden className="size-1.5 rounded-[1px] bg-current" />
+       {item.label}
+-    </Badge>
++    </span>
+   );
+ }
+diff --git a/src/lib/esporadicos.ts b/src/lib/esporadicos.ts
+new file mode 100644
+index 0000000..da59fab
+--- /dev/null
++++ b/src/lib/esporadicos.ts
+@@ -0,0 +1,97 @@
++/** Clientes esporádicos: quem não é da carteira do escritório, cobrado por emissão. */
++
++export type ClienteEsporadico = {
++  id: string;
++  nome: string;
++  /** Só dígitos: 11 (CPF) ou 14 (CNPJ). Único no banco. */
++  documento: string | null;
++  contato: string | null;
++  observacao: string | null;
++  criado_em: string;
++  atualizado_em: string;
++};
++
++/** Linha da view `relatorio_financeiro_esporadicos`. */
++export type LinhaRelatorioEsporadico = {
++  nota_id: string;
++  numero_nf: string;
++  data_emissao: string;
++  tipo_emissao: "rural" | "servico" | "comercio";
++  status: "autorizada" | "cancelada" | "denegada";
++  repassado_financeiro_em: string | null;
++  cliente_esporadico_id: string;
++  nome: string;
++  documento: string | null;
++  contato: string | null;
++  observacao: string | null;
++  valor_cobranca: number | null;
++};
++
++/** Valor padrão cobrado por emissão (o banco aplica o mesmo padrão se vier vazio). */
++export const COBRANCA_PADRAO = 50;
++
++export const soDigitos = (v: string) => v.replace(/\D/g, "");
++
++/** Formata CPF/CNPJ para exibição. */
++export function formatarDocumento(doc: string | null | undefined): string {
++  if (!doc) return "—";
++  const d = soDigitos(doc);
++  if (d.length === 11) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
++  if (d.length === 14) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
++  return doc;
++}
++
++/** Máscara progressiva enquanto o usuário digita. */
++export function mascararDocumento(valor: string): string {
++  const d = soDigitos(valor).slice(0, 14);
++  if (d.length <= 11) {
++    return d
++      .replace(/(\d{3})(\d)/, "$1.$2")
++      .replace(/(\d{3})(\d)/, "$1.$2")
++      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
++  }
++  return d
++    .replace(/^(\d{2})(\d)/, "$1.$2")
++    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
++    .replace(/\.(\d{3})(\d)/, ".$1/$2")
++    .replace(/(\d{4})(\d)/, "$1-$2");
++}
++
++/** Valida dígitos verificadores de CPF (11) ou CNPJ (14). */
++export function documentoValido(valor: string): boolean {
++  const d = soDigitos(valor);
++  if (d.length === 11) {
++    if (/^(\d)\1+$/.test(d)) return false;
++    const calc = (n: number) => {
++      let soma = 0;
++      for (let i = 0; i < n; i++) soma += Number(d[i]) * (n + 1 - i);
++      return ((soma * 10) % 11) % 10;
++    };
++    return calc(9) === Number(d[9]) && calc(10) === Number(d[10]);
++  }
++  if (d.length === 14) {
++    if (/^(\d)\1+$/.test(d)) return false;
++    const calc = (n: number) => {
++      const pesos = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
++      let soma = 0;
++      for (let i = 0; i < n; i++) soma += Number(d[i]) * pesos[i]!;
++      const r = soma % 11;
++      return r < 2 ? 0 : 11 - r;
++    };
++    return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
++  }
++  return false;
++}
++
++const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
++export const formatarReais = (v: number) => brl.format(v);
++
++/** Converte "1.234,56" / "50" / "50,00" em número. Retorna NaN se inválido. */
++export function lerReais(valor: string): number {
++  const limpo = valor.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
++  if (!limpo.trim()) return Number.NaN;
++  return Number(limpo);
++}
++
++/** Valor cobrado de uma nota (notas antigas sem valor contam como o padrão). */
++export const valorDaNota = (v: number | null | undefined) => (v == null ? COBRANCA_PADRAO : Number(v));
+diff --git a/src/lib/relatorio-esporadicos-pdf.ts b/src/lib/relatorio-esporadicos-pdf.ts
+new file mode 100644
+index 0000000..c2e9aaa
+--- /dev/null
++++ b/src/lib/relatorio-esporadicos-pdf.ts
+@@ -0,0 +1,212 @@
++import { format, parseISO } from "date-fns";
++import jsPDF from "jspdf";
++import autoTable from "jspdf-autotable";
++
++import { TIPO_META } from "@/lib/nf";
++import { STATUS_LABEL } from "@/lib/nf";
++import {
++  formatarDocumento,
++  formatarReais,
++  valorDaNota,
++  type LinhaRelatorioEsporadico,
++} from "@/lib/esporadicos";
++
++const AZUL: [number, number, number] = [37, 99, 235]; // #2563EB — cor de marca do Ofis
++const TEXTO: [number, number, number] = [24, 24, 27];
++const CINZA: [number, number, number] = [95, 95, 104];
++
++/** As fontes padrão do jsPDF não têm todos os acentos; o restante do sistema já faz assim. */
++const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "");
++
++export type OpcoesRelatorioEsporadicos = {
++  linhas: LinhaRelatorioEsporadico[];
++  /** Ex.: "Novembro de 2026" */
++  periodo: string;
++  para?: string;
++  observacao?: string;
++  escritorio?: string;
++};
++
++/** Agrupa por cliente, do maior para o menor valor. */
++export function agruparPorCliente(linhas: LinhaRelatorioEsporadico[]) {
++  const mapa = new Map<string, { cliente: LinhaRelatorioEsporadico; notas: LinhaRelatorioEsporadico[]; total: number }>();
++  for (const l of linhas) {
++    const g = mapa.get(l.cliente_esporadico_id) ?? { cliente: l, notas: [], total: 0 };
++    g.notas.push(l);
++    g.total += valorDaNota(l.valor_cobranca);
++    mapa.set(l.cliente_esporadico_id, g);
++  }
++  return [...mapa.values()].sort((a, b) => b.total - a.total || a.cliente.nome.localeCompare(b.cliente.nome));
++}
++
++/** Texto pronto para WhatsApp/e-mail, com subtotal por cliente e total. */
++export function mensagemFinanceiro({ linhas, periodo, para = "Financeiro", observacao }: OpcoesRelatorioEsporadicos) {
++  const grupos = agruparPorCliente(linhas);
++  const total = linhas.reduce((s, l) => s + valorDaNota(l.valor_cobranca), 0);
++  let t = `Olá, ${para}! Segue o relatório de clientes esporádicos (${periodo.toLowerCase()}) para cobrança.\n`;
++  for (const g of grupos) {
++    const doc = g.cliente.documento ?? "";
++    t += `\n${g.cliente.nome} — ${doc.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(doc)}`;
++    if (g.cliente.contato) t += ` — ${g.cliente.contato}`;
++    t += "\n";
++    for (const n of g.notas) {
++      const st = n.status !== "autorizada" ? ` (${STATUS_LABEL[n.status].toLowerCase()})` : "";
++      t += `  • NF ${n.numero_nf} · ${format(parseISO(n.data_emissao), "dd/MM/yyyy")}${st} · ${formatarReais(valorDaNota(n.valor_cobranca))}\n`;
++    }
++    t += `  Subtotal: ${formatarReais(g.total)}\n`;
++  }
++  t += `\nTotal a cobrar: ${formatarReais(total)} (${linhas.length} ${linhas.length === 1 ? "emissão" : "emissões"})`;
++  if (observacao?.trim()) t += `\n\nObs.: ${observacao.trim()}`;
++  return `${t}\n\nO PDF segue em anexo.`;
++}
++
++/** Gera e baixa o PDF do relatório de esporádicos para o financeiro. */
++export function gerarRelatorioEsporadicosPdf({
++  linhas,
++  periodo,
++  para = "Financeiro",
++  observacao,
++  escritorio = "Ofis",
++}: OpcoesRelatorioEsporadicos) {
++  const doc = new jsPDF();
++  const largura = doc.internal.pageSize.getWidth();
++  const grupos = agruparPorCliente(linhas);
++  const total = linhas.reduce((s, l) => s + valorDaNota(l.valor_cobranca), 0);
++
++  // Cabeçalho
++  doc.setFillColor(...AZUL);
++  doc.roundedRect(14, 14, 12, 12, 2, 2, "F");
++  doc.setTextColor(255, 255, 255);
++  doc.setFont("helvetica", "bold");
++  doc.setFontSize(9);
++  doc.text("OF", 20, 21.5, { align: "center" });
++  doc.setTextColor(...TEXTO);
++  doc.setFontSize(12);
++  doc.text(semAcento(escritorio), 30, 19);
++  doc.setFont("helvetica", "normal");
++  doc.setFontSize(9);
++  doc.setTextColor(...CINZA);
++  doc.text(semAcento(`Clientes esporadicos · ${periodo}`), 30, 24.5);
++  doc.setDrawColor(...AZUL);
++  doc.setLineWidth(0.6);
++  doc.line(14, 31, largura - 14, 31);
++
++  doc.setTextColor(...TEXTO);
++  doc.setFont("helvetica", "bold");
++  doc.setFontSize(14);
++  doc.text(semAcento(`Para: ${para}`), 14, 42);
++  doc.setFont("helvetica", "normal");
++  doc.setFontSize(9);
++  doc.setTextColor(...CINZA);
++  doc.text("Notas emitidas para nao clientes, para cobranca", 14, 47.5);
++  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy")}`, largura - 14, 47.5, { align: "right" });
++
++  // Resumo
++  let y = 58;
++  doc.setTextColor(...AZUL);
++  doc.setFont("helvetica", "bold");
++  doc.setFontSize(9);
++  doc.text("RESUMO DA COBRANCA", 14, y);
++  autoTable(doc, {
++    startY: y + 3,
++    head: [["Total a cobrar", "Emissoes", "Clientes"]],
++    body: [[formatarReais(total), String(linhas.length), String(grupos.length)]],
++    theme: "grid",
++    headStyles: { fillColor: [239, 237, 232], textColor: CINZA, fontStyle: "normal", fontSize: 8 },
++    bodyStyles: { fontSize: 13, fontStyle: "bold", textColor: TEXTO },
++    styles: { lineColor: [226, 223, 216] },
++  });
++  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
++
++  // Notas por cliente
++  doc.setTextColor(...AZUL);
++  doc.setFont("helvetica", "bold");
++  doc.setFontSize(9);
++  doc.text("NOTAS POR CLIENTE", 14, y);
++  y += 4;
++
++  if (!grupos.length) {
++    doc.setTextColor(...CINZA);
++    doc.setFont("helvetica", "normal");
++    doc.text("Nenhuma nota para cobrar neste filtro.", 14, y + 4);
++  }
++
++  for (const g of grupos) {
++    if (y > 250) {
++      doc.addPage();
++      y = 20;
++    }
++    const d = g.cliente.documento ?? "";
++    doc.setTextColor(...TEXTO);
++    doc.setFont("helvetica", "bold");
++    doc.setFontSize(10.5);
++    doc.text(semAcento(g.cliente.nome), 14, y + 4);
++    doc.text(formatarReais(g.total), largura - 14, y + 4, { align: "right" });
++    doc.setFont("helvetica", "normal");
++    doc.setFontSize(8.5);
++    doc.setTextColor(...CINZA);
++    doc.text(
++      semAcento(`${d.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(d)}${g.cliente.contato ? ` · ${g.cliente.contato}` : ""}`),
++      14,
++      y + 8.5,
++    );
++    autoTable(doc, {
++      startY: y + 11,
++      head: [["No NF", "Emissao", "Tipo", "Situacao", "Repasse", "Cobranca"]],
++      body: g.notas.map((n) => [
++        n.numero_nf,
++        format(parseISO(n.data_emissao), "dd/MM/yyyy"),
++        semAcento(TIPO_META[n.tipo_emissao].label),
++        STATUS_LABEL[n.status],
++        n.repassado_financeiro_em ? `Repassada ${format(parseISO(n.repassado_financeiro_em), "dd/MM")}` : "Nova",
++        formatarReais(valorDaNota(n.valor_cobranca)),
++      ]),
++      theme: "plain",
++      headStyles: { textColor: CINZA, fontStyle: "normal", fontSize: 8 },
++      bodyStyles: { fontSize: 9, textColor: TEXTO },
++      columnStyles: { 0: { font: "courier" }, 5: { halign: "right" } },
++      styles: { lineColor: [226, 223, 216], lineWidth: { bottom: 0.2 } },
++      margin: { left: 14, right: 14 },
++    });
++    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
++  }
++
++  if (grupos.length) {
++    doc.setDrawColor(...AZUL);
++    doc.setLineWidth(0.6);
++    doc.line(14, y, largura - 14, y);
++    doc.setTextColor(...TEXTO);
++    doc.setFont("helvetica", "normal");
++    doc.setFontSize(11);
++    doc.text("Total geral", 14, y + 7);
++    doc.setFont("helvetica", "bold");
++    doc.text(formatarReais(total), largura - 14, y + 7, { align: "right" });
++    y += 14;
++  }
++
++  if (observacao?.trim()) {
++    if (y > 260) {
++      doc.addPage();
++      y = 20;
++    }
++    doc.setTextColor(...AZUL);
++    doc.setFont("helvetica", "bold");
++    doc.setFontSize(9);
++    doc.text("OBSERVACAO", 14, y + 4);
++    doc.setTextColor(...TEXTO);
++    doc.setFont("helvetica", "normal");
++    doc.setFontSize(9.5);
++    doc.text(doc.splitTextToSize(semAcento(observacao.trim()), largura - 28), 14, y + 10);
++  }
++
++  const paginas = doc.getNumberOfPages();
++  for (let i = 1; i <= paginas; i++) {
++    doc.setPage(i);
++    doc.setFont("helvetica", "normal");
++    doc.setFontSize(8);
++    doc.setTextColor(...CINZA);
++    doc.text(semAcento(`${escritorio} · gerado pelo Ofis · pagina ${i} de ${paginas}`), 14, doc.internal.pageSize.getHeight() - 8);
++  }
++
++  doc.save(`ofis-esporadicos-${format(new Date(), "yyyy-MM-dd")}.pdf`);
++}
+diff --git a/src/lib/relatorio-pdf.ts b/src/lib/relatorio-pdf.ts
+index 31aaa59..9269a77 100644
+--- a/src/lib/relatorio-pdf.ts
++++ b/src/lib/relatorio-pdf.ts
+@@ -24,7 +24,7 @@ export function gerarRelatorioMensalPdf(notas: NotaFiscal[], referencia: Date) {
+   doc.setTextColor(255, 255, 255);
+   doc.setFont("helvetica", "bold");
+   doc.setFontSize(14);
+-  doc.text(`NF Gestao - Relatorio Mensal - ${mesAno}`, 14, 16);
++  doc.text(`Ofis - Relatorio Mensal - ${mesAno}`, 14, 16);
+   doc.setTextColor(15, 23, 42);
+ 
+   const total = doMes.length;
+@@ -126,13 +126,13 @@ export function gerarRelatorioMensalPdf(notas: NotaFiscal[], referencia: Date) {
+     doc.setFontSize(8);
+     doc.setTextColor(100, 116, 139);
+     doc.text(
+-      `NF Gestao - gerado em ${geradoEm} - pagina ${i} de ${paginas}`,
++      `Ofis - gerado em ${geradoEm} - pagina ${i} de ${paginas}`,
+       14,
+       doc.internal.pageSize.getHeight() - 8,
+     );
+   }
+ 
+-  doc.save(`nf-gestao-relatorio-${format(referencia, "yyyy-MM")}.pdf`);
++  doc.save(`ofis-relatorio-${format(referencia, "yyyy-MM")}.pdf`);
+ }
+ 
+ /** Data de referência (mês) a partir de uma string ISO. */
+diff --git a/src/lib/supabase.ts b/src/lib/supabase.ts
+index 628b009..7f91dc5 100644
+--- a/src/lib/supabase.ts
++++ b/src/lib/supabase.ts
+@@ -8,18 +8,60 @@ export type StatusNota = "autorizada" | "cancelada" | "denegada";
+ 
+ export type TipoEmissao = "rural" | "servico" | "comercio";
+ 
++/**
++ * Nota fiscal. Regras garantidas pelo banco (ver docs/banco-de-dados.md):
++ * - toda nota pertence a UM cliente da base (cliente_id) OU a UM cliente esporádico
++ *   (cliente_esporadico_id), nunca aos dois e nunca a nenhum;
++ * - `cliente` é preenchido pelo banco com o nome do cadastro (não confie no texto digitado);
++ * - `valor_cobranca` só existe para esporádicos (padrão R$ 50,00 por emissão).
++ */
+ export type NotaFiscal = {
+   id: string;
+   numero_nf: string;
+   data_emissao: string;
+   cliente: string;
+   cliente_id: string | null;
++  cliente_esporadico_id: string | null;
++  valor_cobranca: number | null;
++  repassado_financeiro_em: string | null;
+   status: StatusNota;
+   tipo_emissao: TipoEmissao;
+   criado_em: string;
+   atualizado_em: string;
+ };
+ 
++/**
++ * Traduz erros do Supabase/Postgres em mensagens que a equipe entende.
++ * Os gatilhos do banco já devolvem mensagens em português (ex.: cliente não cadastrado);
++ * nesses casos a mensagem do banco é mostrada como está.
++ */
++export function mensagemDeErro(
++  error: { code?: string; message?: string } | null | undefined,
++  padrao = "Não foi possível salvar. Tente novamente.",
++): string {
++  if (!error) return padrao;
++  const msg = error.message ?? "";
++  switch (error.code) {
++    case "23514": // check_violation (inclui mensagens dos gatilhos)
++    case "23503": // foreign_key_violation
++      if (/[áéíóúãõç]|cadastr|cliente/i.test(msg)) return msg;
++      return "Algum dado não passou na validação do banco. Confira os campos.";
++    case "23505": // unique_violation
++      if (/documento/i.test(msg)) return "Já existe um cliente esporádico com este CPF/CNPJ.";
++      return "Este registro já existe.";
++    case "42501": // insufficient_privilege (RLS)
++      return "Sua conta não tem permissão. Peça a um administrador para incluir você na equipe.";
++    case "PGRST301":
++    case "401":
++      return "Sua sessão expirou. Entre novamente.";
++    default:
++      if (/row-level security/i.test(msg))
++        return "Sua conta não tem permissão. Peça a um administrador para incluir você na equipe.";
++      if (/fetch|network/i.test(msg)) return "Sem conexão com o servidor. Verifique a internet.";
++      return padrao;
++  }
++}
++
+ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+   auth: {
+     persistSession: true,
+diff --git a/src/lib/tema.ts b/src/lib/tema.ts
+new file mode 100644
+index 0000000..a19336a
+--- /dev/null
++++ b/src/lib/tema.ts
+@@ -0,0 +1,36 @@
++import { useCallback, useEffect, useState } from "react";
++
++export type Tema = "escuro" | "claro";
++
++const CHAVE = "ofis-tema";
++
++/**
++ * Script inline que roda antes da pintura da página, para não "piscar" o tema errado.
++ * O padrão do Ofis é o tema escuro.
++ */
++export const SCRIPT_TEMA = `try{var t=localStorage.getItem('${CHAVE}');document.documentElement.classList.toggle('dark',t!=='claro')}catch(e){document.documentElement.classList.add('dark')}`;
++
++function lerTema(): Tema {
++  if (typeof document === "undefined") return "escuro";
++  return document.documentElement.classList.contains("dark") ? "escuro" : "claro";
++}
++
++export function useTema() {
++  const [tema, setTemaState] = useState<Tema>("escuro");
++
++  useEffect(() => {
++    setTemaState(lerTema());
++  }, []);
++
++  const setTema = useCallback((novo: Tema) => {
++    document.documentElement.classList.toggle("dark", novo === "escuro");
++    try {
++      localStorage.setItem(CHAVE, novo);
++    } catch {
++      // armazenamento indisponível (modo privado): o tema vale só nesta aba
++    }
++    setTemaState(novo);
++  }, []);
++
++  return { tema, setTema };
++}
+diff --git a/src/routeTree.gen.ts b/src/routeTree.gen.ts
+index d89dd6c..564752b 100644
+--- a/src/routeTree.gen.ts
++++ b/src/routeTree.gen.ts
+@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
+ import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
+ import { Route as AuthenticatedLancarNotaRouteImport } from './routes/_authenticated/lancar-nota'
+ import { Route as AuthenticatedMeiRouteImport } from './routes/_authenticated/mei'
++import { Route as AuthenticatedEsporadicosRouteImport } from './routes/_authenticated/esporadicos'
+ import { Route as AuthenticatedNotasDoDiaRouteImport } from './routes/_authenticated/notas-do-dia'
+ import { Route as AuthenticatedObrigacoesRouteImport } from './routes/_authenticated/obrigacoes'
+ import { Route as AuthenticatedRentabilidadeRouteImport } from './routes/_authenticated/rentabilidade'
+@@ -80,6 +81,12 @@ const AuthenticatedMeiRoute = AuthenticatedMeiRouteImport.update({
+   path: '/mei',
+   getParentRoute: () => AuthenticatedRouteRoute,
+ } as any)
++const AuthenticatedEsporadicosRoute =
++  AuthenticatedEsporadicosRouteImport.update({
++    id: '/esporadicos',
++    path: '/esporadicos',
++    getParentRoute: () => AuthenticatedRouteRoute,
++  } as any)
+ const AuthenticatedNotasDoDiaRoute = AuthenticatedNotasDoDiaRouteImport.update({
+   id: '/notas-do-dia',
+   path: '/notas-do-dia',
+@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
+   '/historico': typeof AuthenticatedHistoricoRoute
+   '/lancar-nota': typeof AuthenticatedLancarNotaRoute
+   '/mei': typeof AuthenticatedMeiRoute
++  '/esporadicos': typeof AuthenticatedEsporadicosRoute
+   '/notas-do-dia': typeof AuthenticatedNotasDoDiaRoute
+   '/obrigacoes': typeof AuthenticatedObrigacoesRoute
+   '/rentabilidade': typeof AuthenticatedRentabilidadeRoute
+@@ -129,6 +137,7 @@ export interface FileRoutesByTo {
+   '/historico': typeof AuthenticatedHistoricoRoute
+   '/lancar-nota': typeof AuthenticatedLancarNotaRoute
+   '/mei': typeof AuthenticatedMeiRoute
++  '/esporadicos': typeof AuthenticatedEsporadicosRoute
+   '/notas-do-dia': typeof AuthenticatedNotasDoDiaRoute
+   '/obrigacoes': typeof AuthenticatedObrigacoesRoute
+   '/rentabilidade': typeof AuthenticatedRentabilidadeRoute
+@@ -147,6 +156,7 @@ export interface FileRoutesById {
+   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
+   '/_authenticated/lancar-nota': typeof AuthenticatedLancarNotaRoute
+   '/_authenticated/mei': typeof AuthenticatedMeiRoute
++  '/_authenticated/esporadicos': typeof AuthenticatedEsporadicosRoute
+   '/_authenticated/notas-do-dia': typeof AuthenticatedNotasDoDiaRoute
+   '/_authenticated/obrigacoes': typeof AuthenticatedObrigacoesRoute
+   '/_authenticated/rentabilidade': typeof AuthenticatedRentabilidadeRoute
+@@ -165,6 +175,7 @@ export interface FileRouteTypes {
+     | '/historico'
+     | '/lancar-nota'
+     | '/mei'
++    | '/esporadicos'
+     | '/notas-do-dia'
+     | '/obrigacoes'
+     | '/rentabilidade'
+@@ -181,6 +192,7 @@ export interface FileRouteTypes {
+     | '/historico'
+     | '/lancar-nota'
+     | '/mei'
++    | '/esporadicos'
+     | '/notas-do-dia'
+     | '/obrigacoes'
+     | '/rentabilidade'
+@@ -198,6 +210,7 @@ export interface FileRouteTypes {
+     | '/_authenticated/historico'
+     | '/_authenticated/lancar-nota'
+     | '/_authenticated/mei'
++    | '/_authenticated/esporadicos'
+     | '/_authenticated/notas-do-dia'
+     | '/_authenticated/obrigacoes'
+     | '/_authenticated/rentabilidade'
+@@ -289,6 +302,13 @@ declare module '@tanstack/react-router' {
+       preLoaderRoute: typeof AuthenticatedMeiRouteImport
+       parentRoute: typeof AuthenticatedRouteRoute
+     }
++    '/_authenticated/esporadicos': {
++      id: '/_authenticated/esporadicos'
++      path: '/esporadicos'
++      fullPath: '/esporadicos'
++      preLoaderRoute: typeof AuthenticatedEsporadicosRouteImport
++      parentRoute: typeof AuthenticatedRouteRoute
++    }
+     '/_authenticated/notas-do-dia': {
+       id: '/_authenticated/notas-do-dia'
+       path: '/notas-do-dia'
+@@ -329,6 +349,7 @@ interface AuthenticatedRouteRouteChildren {
+   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
+   AuthenticatedLancarNotaRoute: typeof AuthenticatedLancarNotaRoute
+   AuthenticatedMeiRoute: typeof AuthenticatedMeiRoute
++  AuthenticatedEsporadicosRoute: typeof AuthenticatedEsporadicosRoute
+   AuthenticatedNotasDoDiaRoute: typeof AuthenticatedNotasDoDiaRoute
+   AuthenticatedObrigacoesRoute: typeof AuthenticatedObrigacoesRoute
+   AuthenticatedRentabilidadeRoute: typeof AuthenticatedRentabilidadeRoute
+@@ -344,6 +365,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
+   AuthenticatedLancarNotaRoute: AuthenticatedLancarNotaRoute,
+   AuthenticatedMeiRoute: AuthenticatedMeiRoute,
++  AuthenticatedEsporadicosRoute: AuthenticatedEsporadicosRoute,
+   AuthenticatedNotasDoDiaRoute: AuthenticatedNotasDoDiaRoute,
+   AuthenticatedObrigacoesRoute: AuthenticatedObrigacoesRoute,
+   AuthenticatedRentabilidadeRoute: AuthenticatedRentabilidadeRoute,
+diff --git a/src/routes/__root.tsx b/src/routes/__root.tsx
+index 223476e..7bc81e3 100644
+--- a/src/routes/__root.tsx
++++ b/src/routes/__root.tsx
+@@ -13,22 +13,23 @@ import { useEffect, type ReactNode } from "react";
+ import appCss from "../styles.css?url";
+ import { Toaster } from "../components/ui/sonner";
+ import { reportLovableError } from "../lib/lovable-error-reporting";
++import { SCRIPT_TEMA } from "../lib/tema";
+ 
+ function NotFoundComponent() {
+   return (
+     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+       <div className="max-w-md text-center">
+         <h1 className="text-7xl font-bold text-foreground">404</h1>
+-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
++        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
+         <p className="mt-2 text-sm text-muted-foreground">
+-          The page you're looking for doesn't exist or has been moved.
++          A página que você procura não existe ou mudou de endereço.
+         </p>
+         <div className="mt-6">
+           <Link
+             to="/"
+             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+           >
+-            Go home
++            Voltar ao início
+           </Link>
+         </div>
+       </div>
+@@ -47,10 +48,10 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
+     <div className="flex min-h-screen items-center justify-center bg-background px-4">
+       <div className="max-w-md text-center">
+         <h1 className="text-xl font-semibold tracking-tight text-foreground">
+-          This page didn't load
++          Esta página não carregou
+         </h1>
+         <p className="mt-2 text-sm text-muted-foreground">
+-          Something went wrong on our end. You can try refreshing or head back home.
++          Algo deu errado do nosso lado. Tente de novo ou volte ao início.
+         </p>
+         <div className="mt-6 flex flex-wrap justify-center gap-2">
+           <button
+@@ -60,13 +61,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
+             }}
+             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+           >
+-            Try again
++            Tentar de novo
+           </button>
+           <a
+             href="/"
+             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+           >
+-            Go home
++            Voltar ao início
+           </a>
+         </div>
+       </div>
+@@ -79,13 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+     meta: [
+       { charSet: "utf-8" },
+       { name: "viewport", content: "width=device-width, initial-scale=1" },
+-      { title: "NF Gestão — Gestão de Notas Fiscais" },
++      { title: "Ofis — Gestão de Notas Fiscais" },
+       {
+         name: "description",
+         content:
+           "Sistema para o setor fiscal lançar e acompanhar as notas fiscais emitidas ao longo do dia.",
+       },
+-      { property: "og:title", content: "NF Gestão — Gestão de Notas Fiscais" },
++      { property: "og:title", content: "Ofis — Gestão de Notas Fiscais" },
++      { name: "theme-color", content: "#161618" },
+       {
+         property: "og:description",
+         content: "Lance e acompanhe o volume e o status das notas fiscais emitidas.",
+@@ -99,6 +101,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+         href: appCss,
+       },
+       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
++      { rel: "preconnect", href: "https://fonts.googleapis.com" },
++      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
++      {
++        rel: "stylesheet",
++        href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap",
++      },
+     ],
+   }),
+ 
+@@ -110,8 +118,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+ 
+ function RootShell({ children }: { children: ReactNode }) {
+   return (
+-    <html lang="pt-BR">
++    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+       <head>
++        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+         <HeadContent />
+       </head>
+       <body>
+diff --git a/src/routes/_authenticated/analises.tsx b/src/routes/_authenticated/analises.tsx
+index d248807..54ca427 100644
+--- a/src/routes/_authenticated/analises.tsx
++++ b/src/routes/_authenticated/analises.tsx
+@@ -61,13 +61,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/analises")({
+   head: () => ({
+     meta: [
+-      { title: "Análises — NF Gestão" },
++      { title: "Análises — Ofis" },
+       {
+         name: "description",
+         content:
+           "Insights das emissões: ranking de clientes, evolução mensal, taxa de cancelamento e dias mais movimentados.",
+       },
+-      { property: "og:title", content: "Análises — NF Gestão" },
++      { property: "og:title", content: "Análises — Ofis" },
+       {
+         property: "og:description",
+         content: "Ranking de clientes, evolução mensal e padrões de emissão de notas fiscais.",
+diff --git a/src/routes/_authenticated/calendario.tsx b/src/routes/_authenticated/calendario.tsx
+index b105b11..9be16c1 100644
+--- a/src/routes/_authenticated/calendario.tsx
++++ b/src/routes/_authenticated/calendario.tsx
+@@ -49,13 +49,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/calendario")({
+   head: () => ({
+     meta: [
+-      { title: "Calendário Fiscal — NF Gestão" },
++      { title: "Calendário Fiscal — Ofis" },
+       {
+         name: "description",
+         content:
+           "Calendário fiscal com vencimentos, obrigações, lembretes, reuniões, tarefas e notas emitidas por dia.",
+       },
+-      { property: "og:title", content: "Calendário Fiscal — NF Gestão" },
++      { property: "og:title", content: "Calendário Fiscal — Ofis" },
+       {
+         property: "og:description",
+         content: "Vencimentos, obrigações e emissões organizados em um calendário mensal.",
+diff --git a/src/routes/_authenticated/clientes.tsx b/src/routes/_authenticated/clientes.tsx
+index 6a9be4f..1341a1d 100644
+--- a/src/routes/_authenticated/clientes.tsx
++++ b/src/routes/_authenticated/clientes.tsx
+@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
+ import { toast } from "sonner";
+ import { History, Plus, Search, UserCheck, UserX, Users, Layers } from "lucide-react";
+ 
+-import { supabase, type NotaFiscal, type TipoEmissao } from "@/lib/supabase";
++import { supabase, mensagemDeErro, type NotaFiscal, type TipoEmissao } from "@/lib/supabase";
+ import type { Cliente } from "@/lib/clientes";
+ import { TIPOS, TIPO_META } from "@/lib/nf";
+ import { Button } from "@/components/ui/button";
+@@ -46,13 +46,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/clientes")({
+   head: () => ({
+     meta: [
+-      { title: "Clientes — NF Gestão" },
++      { title: "Clientes — Ofis" },
+       {
+         name: "description",
+         content:
+           "Gestão de clientes do setor fiscal: cadastro, tipo de emissão, volume de notas e histórico de emissões.",
+       },
+-      { property: "og:title", content: "Clientes — NF Gestão" },
++      { property: "og:title", content: "Clientes — Ofis" },
+       {
+         property: "og:description",
+         content: "Cadastro de clientes com volume de notas, última emissão e status de atividade.",
+@@ -177,7 +177,13 @@ function ClientesPage() {
+       toast.success("Cliente excluído.");
+       queryClient.invalidateQueries({ queryKey: ["clientes"] });
+     },
+-    onError: (error: Error) => toast.error(error.message || "Não foi possível excluir."),
++    onError: (error: Error & { code?: string }) =>
++      toast.error(
++        // O banco não deixa nota sem cliente: cliente com notas não pode ser excluído.
++        /notas_um_tipo_de_cliente/.test(error.message)
++          ? "Este cliente tem notas lançadas e não pode ser excluído."
++          : mensagemDeErro(error, "Não foi possível excluir."),
++      ),
+   });
+ 
+   const notasDoHistorico = useMemo(() => {
+diff --git a/src/routes/_authenticated/comunicacoes.tsx b/src/routes/_authenticated/comunicacoes.tsx
+index 9cfdf63..a38719f 100644
+--- a/src/routes/_authenticated/comunicacoes.tsx
++++ b/src/routes/_authenticated/comunicacoes.tsx
+@@ -36,13 +36,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/comunicacoes")({
+   head: () => ({
+     meta: [
+-      { title: "Central de Comunicação — NF Gestão" },
++      { title: "Central de Comunicação — Ofis" },
+       {
+         name: "description",
+         content:
+           "Registre solicitações, retornos, pendências e informativos dos clientes com acompanhamento de status.",
+       },
+-      { property: "og:title", content: "Central de Comunicação — NF Gestão" },
++      { property: "og:title", content: "Central de Comunicação — Ofis" },
+       {
+         property: "og:description",
+         content: "Solicitações, pendências e retornos dos clientes em um só lugar.",
+diff --git a/src/routes/_authenticated/dashboard.tsx b/src/routes/_authenticated/dashboard.tsx
+index 77cb6e3..269308a 100644
+--- a/src/routes/_authenticated/dashboard.tsx
++++ b/src/routes/_authenticated/dashboard.tsx
+@@ -63,12 +63,12 @@ import {
+ export const Route = createFileRoute("/_authenticated/dashboard")({
+   head: () => ({
+     meta: [
+-      { title: "Dashboard — NF Gestão" },
++      { title: "Dashboard — Ofis" },
+       {
+         name: "description",
+         content: "Visão geral do volume e status das notas fiscais emitidas no dia, semana e mês.",
+       },
+-      { property: "og:title", content: "Dashboard — NF Gestão" },
++      { property: "og:title", content: "Dashboard — Ofis" },
+       {
+         property: "og:description",
+         content: "Volume e status das notas fiscais emitidas pelo setor fiscal.",
+diff --git a/src/routes/_authenticated/esporadicos.tsx b/src/routes/_authenticated/esporadicos.tsx
+new file mode 100644
+index 0000000..254be60
+--- /dev/null
++++ b/src/routes/_authenticated/esporadicos.tsx
+@@ -0,0 +1,571 @@
++import { useMemo, useState } from "react";
++import { createFileRoute } from "@tanstack/react-router";
++import { useQuery, useQueryClient } from "@tanstack/react-query";
++import { format, parseISO } from "date-fns";
++import { ptBR } from "date-fns/locale";
++import { toast } from "sonner";
++import { Copy, FileDown, FileCheck2, Loader2, Search, UserPlus } from "lucide-react";
++
++import { supabase, mensagemDeErro } from "@/lib/supabase";
++import {
++  formatarDocumento,
++  formatarReais,
++  valorDaNota,
++  type ClienteEsporadico,
++  type LinhaRelatorioEsporadico,
++} from "@/lib/esporadicos";
++import {
++  gerarRelatorioEsporadicosPdf,
++  mensagemFinanceiro,
++} from "@/lib/relatorio-esporadicos-pdf";
++import { Button } from "@/components/ui/button";
++import { Input } from "@/components/ui/input";
++import { Label } from "@/components/ui/label";
++import { Textarea } from "@/components/ui/textarea";
++import { Checkbox } from "@/components/ui/checkbox";
++import { Switch } from "@/components/ui/switch";
++import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
++import { Skeleton } from "@/components/ui/skeleton";
++import { StatusBadge } from "@/components/status-badge";
++import { TipoBadge } from "@/components/tipo-badge";
++import { EmptyState } from "@/components/empty-state";
++import {
++  Dialog,
++  DialogContent,
++  DialogDescription,
++  DialogFooter,
++  DialogHeader,
++  DialogTitle,
++} from "@/components/ui/dialog";
++import {
++  Select,
++  SelectContent,
++  SelectItem,
++  SelectTrigger,
++  SelectValue,
++} from "@/components/ui/select";
++import {
++  Table,
++  TableBody,
++  TableCell,
++  TableHead,
++  TableHeader,
++  TableRow,
++} from "@/components/ui/table";
++import { cn } from "@/lib/utils";
++
++export const Route = createFileRoute("/_authenticated/esporadicos")({
++  head: () => ({
++    meta: [
++      { title: "Clientes esporádicos — Ofis" },
++      {
++        name: "description",
++        content: "Notas emitidas para quem não é cliente do escritório, prontas para o financeiro cobrar.",
++      },
++    ],
++  }),
++  component: EsporadicosPage,
++});
++
++type Filtro = "arepassar" | "repassadas" | "todas";
++
++const mesDe = (iso: string) => iso.slice(0, 7); // "2026-11"
++const rotuloMes = (ym: string) => {
++  const s = format(parseISO(`${ym}-01`), "MMMM 'de' yyyy", { locale: ptBR });
++  return s.charAt(0).toUpperCase() + s.slice(1);
++};
++const normalizar = (v: string) =>
++  v
++    .normalize("NFD")
++    .replace(/[̀-ͯ]/g, "")
++    .toLowerCase();
++
++function EsporadicosPage() {
++  const queryClient = useQueryClient();
++  const mesAtual = format(new Date(), "yyyy-MM");
++  const [periodo, setPeriodo] = useState<string>(mesAtual);
++  const [busca, setBusca] = useState("");
++  const [filtro, setFiltro] = useState<Filtro>("arepassar");
++  const [cobrarCanceladas, setCobrarCanceladas] = useState(false);
++  const [selecionadas, setSelecionadas] = useState<Set<string>>(new Set());
++  const [salvando, setSalvando] = useState(false);
++  const [dialogo, setDialogo] = useState(false);
++  const [para, setPara] = useState("Financeiro");
++  const [observacao, setObservacao] = useState("");
++
++  const { data: linhas, isLoading } = useQuery({
++    queryKey: ["relatorio-esporadicos"],
++    queryFn: async () => {
++      const { data, error } = await supabase
++        .from("relatorio_financeiro_esporadicos")
++        .select("*")
++        .order("data_emissao", { ascending: false })
++        .order("numero_nf", { ascending: false });
++      if (error) throw error;
++      return (data ?? []) as LinhaRelatorioEsporadico[];
++    },
++  });
++
++  const { data: base } = useQuery({
++    queryKey: ["clientes-esporadicos"],
++    queryFn: async () => {
++      const { data, error } = await supabase
++        .from("clientes_esporadicos")
++        .select("*")
++        .order("nome", { ascending: true });
++      if (error) throw error;
++      return (data ?? []) as ClienteEsporadico[];
++    },
++  });
++
++  const todas = linhas ?? [];
++  const meses = useMemo(() => {
++    const set = new Set(todas.map((l) => mesDe(l.data_emissao)));
++    set.add(mesAtual);
++    return [...set].sort().reverse();
++  }, [todas, mesAtual]);
++
++  const cobravel = (l: LinhaRelatorioEsporadico) => l.status === "autorizada" || cobrarCanceladas;
++
++  const doPeriodo = useMemo(() => {
++    const q = normalizar(busca.trim());
++    const qDig = busca.replace(/\D/g, "");
++    return todas.filter((l) => {
++      if (periodo !== "todos" && mesDe(l.data_emissao) !== periodo) return false;
++      if (!q) return true;
++      return (
++        normalizar(l.nome).includes(q) ||
++        (qDig.length > 0 && (l.documento ?? "").includes(qDig)) ||
++        l.numero_nf.includes(busca.trim())
++      );
++    });
++  }, [todas, periodo, busca]);
++
++  const aRepassar = doPeriodo.filter((l) => cobravel(l) && !l.repassado_financeiro_em);
++  const repassadas = doPeriodo.filter((l) => !!l.repassado_financeiro_em);
++  const visiveis =
++    filtro === "arepassar" ? aRepassar : filtro === "repassadas" ? repassadas : doPeriodo;
++
++  // Notas que entram no relatório: as selecionadas, ou todas as a repassar do período.
++  const doRelatorio = selecionadas.size
++    ? doPeriodo.filter((l) => selecionadas.has(l.nota_id))
++    : aRepassar;
++  const totalRelatorio = doRelatorio.reduce((s, l) => s + valorDaNota(l.valor_cobranca), 0);
++  const rotuloPeriodo = periodo === "todos" ? "Todos os períodos" : rotuloMes(periodo);
++
++  const selecionaveis = visiveis.filter((l) => cobravel(l) && !l.repassado_financeiro_em);
++  const todasMarcadas =
++    selecionaveis.length > 0 && selecionaveis.every((l) => selecionadas.has(l.nota_id));
++
++  function alternar(id: string, marcar: boolean) {
++    setSelecionadas((atual) => {
++      const novo = new Set(atual);
++      if (marcar) novo.add(id);
++      else novo.delete(id);
++      return novo;
++    });
++  }
++
++  async function marcarRepassadas(ids: string[]) {
++    if (!ids.length) return;
++    setSalvando(true);
++    const { error } = await supabase
++      .from("notas_fiscais")
++      .update({ repassado_financeiro_em: new Date().toISOString() })
++      .in("id", ids);
++    setSalvando(false);
++    if (error) {
++      toast.error(mensagemDeErro(error, "Não foi possível marcar as notas como repassadas."));
++      return;
++    }
++    setSelecionadas(new Set());
++    await queryClient.invalidateQueries({ queryKey: ["relatorio-esporadicos"] });
++    toast.success(
++      `${ids.length} ${ids.length === 1 ? "nota marcada como repassada" : "notas marcadas como repassadas"}`,
++      {
++        action: {
++          label: "Desfazer",
++          onClick: async () => {
++            const { error: e2 } = await supabase
++              .from("notas_fiscais")
++              .update({ repassado_financeiro_em: null })
++              .in("id", ids);
++            if (e2) toast.error(mensagemDeErro(e2));
++            queryClient.invalidateQueries({ queryKey: ["relatorio-esporadicos"] });
++          },
++        },
++      },
++    );
++  }
++
++  async function copiarMensagem() {
++    const texto = mensagemFinanceiro({ linhas: doRelatorio, periodo: rotuloPeriodo, para, observacao });
++    try {
++      await navigator.clipboard.writeText(texto);
++      toast.success("Mensagem copiada. Cole no WhatsApp ou no e-mail.");
++    } catch {
++      toast.error("Não foi possível copiar automaticamente.");
++    }
++  }
++
++  function baixarPdf() {
++    gerarRelatorioEsporadicosPdf({ linhas: doRelatorio, periodo: rotuloPeriodo, para, observacao });
++  }
++
++  const contagemPorCliente = useMemo(() => {
++    const m = new Map<string, { n: number; ultima: string }>();
++    for (const l of todas) {
++      const a = m.get(l.cliente_esporadico_id);
++      if (!a) m.set(l.cliente_esporadico_id, { n: 1, ultima: l.data_emissao });
++      else {
++        a.n += 1;
++        if (l.data_emissao > a.ultima) a.ultima = l.data_emissao;
++      }
++    }
++    return m;
++  }, [todas]);
++
++  return (
++    <div className="mx-auto max-w-6xl space-y-6">
++      <header className="flex flex-wrap items-end justify-between gap-4">
++        <div>
++          <h1 className="text-2xl font-semibold text-foreground">Clientes esporádicos</h1>
++          <p className="text-sm text-muted-foreground">
++            Notas emitidas para quem não é cliente do escritório. Gere o relatório e repasse ao
++            financeiro para cobrança.
++          </p>
++        </div>
++        <div className="flex flex-wrap gap-2">
++          <Button variant="outline" onClick={() => setDialogo(true)} disabled={!doRelatorio.length}>
++            <FileDown />
++            Gerar relatório
++          </Button>
++          <Button
++            onClick={() => marcarRepassadas([...selecionadas])}
++            disabled={!selecionadas.size || salvando}
++          >
++            {salvando ? <Loader2 className="animate-spin" /> : <FileCheck2 />}
++            {selecionadas.size
++              ? `Marcar ${selecionadas.size} como repassada${selecionadas.size > 1 ? "s" : ""}`
++              : "Marcar como repassadas"}
++          </Button>
++        </div>
++      </header>
++
++      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
++        {[
++          { rotulo: "Esporádicos cadastrados", valor: String(base?.length ?? "—"), rodape: "base separada da carteira" },
++          {
++            rotulo: "Notas no período",
++            valor: String(doPeriodo.length),
++            rodape: `${doPeriodo.filter(cobravel).length} emissões cobráveis`,
++          },
++          {
++            rotulo: "A repassar ao financeiro",
++            valor: formatarReais(aRepassar.reduce((s, l) => s + valorDaNota(l.valor_cobranca), 0)),
++            rodape: aRepassar.length
++              ? `${aRepassar.length} ${aRepassar.length === 1 ? "emissão" : "emissões"} a cobrar`
++              : "Tudo repassado",
++            destaque: aRepassar.length > 0,
++          },
++          { rotulo: "Já repassadas", valor: String(repassadas.length), rodape: "no período" },
++        ].map((k) => (
++          <Card key={k.rotulo} className="rounded-lg border-border shadow-kpi">
++            <CardContent className="space-y-1 py-4">
++              <p className="text-sm text-muted-foreground">{k.rotulo}</p>
++              <p className="nums text-2xl font-semibold text-foreground">{k.valor}</p>
++              <p className={cn("text-xs", k.destaque ? "text-warning" : "text-muted-foreground")}>
++                {k.rodape}
++              </p>
++            </CardContent>
++          </Card>
++        ))}
++      </div>
++
++      <Card className="rounded-lg border-border shadow-card">
++        <CardContent className="space-y-4 pt-6">
++          <div className="flex flex-wrap items-end gap-3">
++            <div className="min-w-56 flex-1 space-y-1.5">
++              <Label htmlFor="esp-busca">Buscar</Label>
++              <div className="relative">
++                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
++                <Input
++                  id="esp-busca"
++                  value={busca}
++                  onChange={(e) => setBusca(e.target.value)}
++                  placeholder="Nome, CPF/CNPJ ou número da nota"
++                  className="pl-9"
++                />
++              </div>
++            </div>
++            <div className="w-52 space-y-1.5">
++              <Label htmlFor="esp-periodo">Período</Label>
++              <Select
++                value={periodo}
++                onValueChange={(v) => {
++                  setPeriodo(v);
++                  setSelecionadas(new Set());
++                }}
++              >
++                <SelectTrigger id="esp-periodo">
++                  <SelectValue />
++                </SelectTrigger>
++                <SelectContent>
++                  {meses.map((m) => (
++                    <SelectItem key={m} value={m}>
++                      {rotuloMes(m)}
++                    </SelectItem>
++                  ))}
++                  <SelectItem value="todos">Todos</SelectItem>
++                </SelectContent>
++              </Select>
++            </div>
++            <label className="flex h-10 items-center gap-2 text-sm text-muted-foreground">
++              <Switch
++                checked={cobrarCanceladas}
++                onCheckedChange={(v) => {
++                  setCobrarCanceladas(v);
++                  setSelecionadas(new Set());
++                }}
++              />
++              Cobrar canceladas e denegadas
++            </label>
++          </div>
++
++          <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar notas">
++            {(
++              [
++                ["arepassar", "A repassar", aRepassar.length],
++                ["repassadas", "Repassadas", repassadas.length],
++                ["todas", "Todas", doPeriodo.length],
++              ] as const
++            ).map(([valor, rotulo, qtd]) => (
++              <button
++                key={valor}
++                type="button"
++                aria-pressed={filtro === valor}
++                onClick={() => {
++                  setFiltro(valor);
++                  setSelecionadas(new Set());
++                }}
++                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-sm text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-primary aria-pressed:bg-accent aria-pressed:text-accent-foreground"
++              >
++                {rotulo} <span className="nums font-semibold">{qtd}</span>
++              </button>
++            ))}
++          </div>
++
++          {isLoading ? (
++            <div className="space-y-2">
++              {Array.from({ length: 4 }).map((_, i) => (
++                <Skeleton key={i} className="h-12 w-full" />
++              ))}
++            </div>
++          ) : visiveis.length === 0 ? (
++            <EmptyState
++              icon={FileCheck2}
++              title={filtro === "arepassar" ? "Nada a repassar" : "Nenhuma nota aqui"}
++              description={
++                filtro === "arepassar"
++                  ? "Todas as notas de esporádicos do período já foram enviadas ao financeiro."
++                  : "Mude o período ou o filtro. Notas de esporádicos são lançadas em Lançar Nota."
++              }
++            />
++          ) : (
++            <div className="overflow-x-auto">
++              <Table>
++                <TableHeader>
++                  <TableRow>
++                    <TableHead className="w-10">
++                      <Checkbox
++                        aria-label="Selecionar todas as notas a repassar"
++                        checked={todasMarcadas}
++                        disabled={!selecionaveis.length}
++                        onCheckedChange={(v) => {
++                          for (const l of selecionaveis) alternar(l.nota_id, v === true);
++                        }}
++                      />
++                    </TableHead>
++                    <TableHead>Nº NF</TableHead>
++                    <TableHead>Emissão</TableHead>
++                    <TableHead>Cliente</TableHead>
++                    <TableHead>Contato</TableHead>
++                    <TableHead>Tipo</TableHead>
++                    <TableHead className="text-right">Cobrança</TableHead>
++                    <TableHead>Status</TableHead>
++                    <TableHead>Financeiro</TableHead>
++                  </TableRow>
++                </TableHeader>
++                <TableBody>
++                  {visiveis.map((l) => {
++                    const pode = cobravel(l) && !l.repassado_financeiro_em;
++                    return (
++                      <TableRow key={l.nota_id} data-state={selecionadas.has(l.nota_id) ? "selected" : undefined}>
++                        <TableCell>
++                          {pode ? (
++                            <Checkbox
++                              aria-label={`Selecionar nota ${l.numero_nf}`}
++                              checked={selecionadas.has(l.nota_id)}
++                              onCheckedChange={(v) => alternar(l.nota_id, v === true)}
++                            />
++                          ) : null}
++                        </TableCell>
++                        <TableCell className="font-mono text-sm">{l.numero_nf}</TableCell>
++                        <TableCell className="nums">
++                          {format(parseISO(l.data_emissao), "dd/MM/yyyy")}
++                        </TableCell>
++                        <TableCell>
++                          <div className="font-medium text-foreground">{l.nome}</div>
++                          <div className="font-mono text-xs text-muted-foreground">
++                            {formatarDocumento(l.documento)}
++                          </div>
++                        </TableCell>
++                        <TableCell className="text-sm text-muted-foreground">
++                          {l.contato || "—"}
++                        </TableCell>
++                        <TableCell>
++                          <TipoBadge tipo={l.tipo_emissao} />
++                        </TableCell>
++                        <TableCell className="nums text-right">
++                          {cobravel(l) ? formatarReais(valorDaNota(l.valor_cobranca)) : "—"}
++                        </TableCell>
++                        <TableCell>
++                          <StatusBadge status={l.status} />
++                        </TableCell>
++                        <TableCell className="text-sm">
++                          {l.repassado_financeiro_em ? (
++                            <span className="text-success">
++                              Repassada {format(parseISO(l.repassado_financeiro_em), "dd/MM")}
++                            </span>
++                          ) : !cobravel(l) ? (
++                            <span className="text-muted-foreground">Não cobrar</span>
++                          ) : (
++                            <span className="text-warning">A repassar</span>
++                          )}
++                        </TableCell>
++                      </TableRow>
++                    );
++                  })}
++                </TableBody>
++              </Table>
++              <p className="pt-3 text-xs text-muted-foreground">
++                {selecionadas.size ? (
++                  <strong className="text-foreground">
++                    {selecionadas.size} selecionada{selecionadas.size > 1 ? "s" : ""} ·{" "}
++                  </strong>
++                ) : null}
++                Cobrança definida em cada emissão (padrão R$ 50,00).{" "}
++                {cobrarCanceladas
++                  ? "Canceladas e denegadas também são cobradas."
++                  : "Canceladas e denegadas não são cobradas."}
++              </p>
++            </div>
++          )}
++        </CardContent>
++      </Card>
++
++      <Card className="rounded-lg border-border shadow-card">
++        <CardHeader className="flex-row items-center justify-between space-y-0">
++          <CardTitle className="flex items-center gap-2 text-base">
++            <UserPlus className="size-4 text-muted-foreground" />
++            Base de esporádicos
++          </CardTitle>
++          <span className="text-xs text-muted-foreground">Cadastrados pelo Lançar Nota</span>
++        </CardHeader>
++        <CardContent>
++          {!base?.length ? (
++            <EmptyState
++              icon={UserPlus}
++              title="Nenhum cliente esporádico ainda"
++              description="Ao lançar uma nota como “Cliente esporádico”, o cadastro aparece aqui."
++            />
++          ) : (
++            <div className="overflow-x-auto">
++              <Table>
++                <TableHeader>
++                  <TableRow>
++                    <TableHead>Nome</TableHead>
++                    <TableHead>CPF / CNPJ</TableHead>
++                    <TableHead>Contato</TableHead>
++                    <TableHead className="text-right">Notas</TableHead>
++                    <TableHead>Última nota</TableHead>
++                  </TableRow>
++                </TableHeader>
++                <TableBody>
++                  {base.map((e) => {
++                    const c = contagemPorCliente.get(e.id);
++                    return (
++                      <TableRow key={e.id}>
++                        <TableCell className="font-medium">{e.nome}</TableCell>
++                        <TableCell className="font-mono text-sm">{formatarDocumento(e.documento)}</TableCell>
++                        <TableCell className="text-sm text-muted-foreground">{e.contato || "—"}</TableCell>
++                        <TableCell className="nums text-right">{c?.n ?? 0}</TableCell>
++                        <TableCell className="nums">
++                          {c ? format(parseISO(c.ultima), "dd/MM/yyyy") : "—"}
++                        </TableCell>
++                      </TableRow>
++                    );
++                  })}
++                </TableBody>
++              </Table>
++            </div>
++          )}
++        </CardContent>
++      </Card>
++
++      <Dialog open={dialogo} onOpenChange={setDialogo}>
++        <DialogContent className="sm:max-w-lg">
++          <DialogHeader>
++            <DialogTitle>Relatório para o financeiro</DialogTitle>
++            <DialogDescription>
++              {selecionadas.size
++                ? `${doRelatorio.length} nota(s) selecionada(s)`
++                : `Notas ainda não repassadas · ${rotuloPeriodo}`}{" "}
++              · total {formatarReais(totalRelatorio)}
++            </DialogDescription>
++          </DialogHeader>
++          <div className="space-y-4">
++            <div className="space-y-1.5">
++              <Label htmlFor="rel-para">Para</Label>
++              <Input id="rel-para" value={para} onChange={(e) => setPara(e.target.value)} />
++            </div>
++            <div className="space-y-1.5">
++              <Label htmlFor="rel-obs">
++                Observação <span className="font-normal text-muted-foreground">(opcional)</span>
++              </Label>
++              <Textarea
++                id="rel-obs"
++                value={observacao}
++                onChange={(e) => setObservacao(e.target.value)}
++                placeholder="Ex.: cobrar até dia 15. Marcos pediu boleto."
++                rows={3}
++              />
++            </div>
++          </div>
++          <DialogFooter className="gap-2 sm:gap-2">
++            <Button variant="outline" onClick={copiarMensagem}>
++              <Copy />
++              Copiar mensagem
++            </Button>
++            <Button variant="outline" onClick={baixarPdf}>
++              <FileDown />
++              Baixar PDF
++            </Button>
++            <Button
++              onClick={async () => {
++                await marcarRepassadas(
++                  doRelatorio.filter((l) => !l.repassado_financeiro_em).map((l) => l.nota_id),
++                );
++                setDialogo(false);
++              }}
++              disabled={salvando || !doRelatorio.some((l) => !l.repassado_financeiro_em)}
++            >
++              <FileCheck2 />
++              Marcar como repassadas
++            </Button>
++          </DialogFooter>
++        </DialogContent>
++      </Dialog>
++    </div>
++  );
++}
+diff --git a/src/routes/_authenticated/historico.tsx b/src/routes/_authenticated/historico.tsx
+index 17c316d..2a34286 100644
+--- a/src/routes/_authenticated/historico.tsx
++++ b/src/routes/_authenticated/historico.tsx
+@@ -35,12 +35,12 @@ import {
+ export const Route = createFileRoute("/_authenticated/historico")({
+   head: () => ({
+     meta: [
+-      { title: "Histórico — NF Gestão" },
++      { title: "Histórico — Ofis" },
+       {
+         name: "description",
+         content: "Consulte todas as notas fiscais por período e status, com paginação e exportação em CSV.",
+       },
+-      { property: "og:title", content: "Histórico — NF Gestão" },
++      { property: "og:title", content: "Histórico — Ofis" },
+       {
+         property: "og:description",
+         content: "Histórico completo de notas fiscais com filtros e exportação CSV.",
+diff --git a/src/routes/_authenticated/lancar-nota.tsx b/src/routes/_authenticated/lancar-nota.tsx
+index b470df6..c059502 100644
+--- a/src/routes/_authenticated/lancar-nota.tsx
++++ b/src/routes/_authenticated/lancar-nota.tsx
+@@ -4,10 +4,26 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
+ import { format, parseISO } from "date-fns";
+ import { ptBR } from "date-fns/locale";
+ import { toast } from "sonner";
+-import { CheckCircle2, Loader2, Gauge, X } from "lucide-react";
++import { CheckCircle2, Loader2, Gauge, X, UserPlus, Users } from "lucide-react";
+ import { z } from "zod";
+ 
+-import { supabase, type NotaFiscal, type StatusNota, type TipoEmissao } from "@/lib/supabase";
++import {
++  supabase,
++  mensagemDeErro,
++  type NotaFiscal,
++  type StatusNota,
++  type TipoEmissao,
++} from "@/lib/supabase";
++import {
++  COBRANCA_PADRAO,
++  documentoValido,
++  formatarDocumento,
++  formatarReais,
++  lerReais,
++  mascararDocumento,
++  soDigitos,
++  type ClienteEsporadico,
++} from "@/lib/esporadicos";
+ import { Button } from "@/components/ui/button";
+ import { Input } from "@/components/ui/input";
+ import { Label } from "@/components/ui/label";
+@@ -16,6 +32,7 @@ import { StatusBadge } from "@/components/status-badge";
+ import { TipoBadge } from "@/components/tipo-badge";
+ import { ClienteCombobox, type ClienteOption } from "@/components/cliente-combobox";
+ import type { Cliente } from "@/lib/clientes";
++import { cn } from "@/lib/utils";
+ import {
+   Select,
+   SelectContent,
+@@ -27,12 +44,12 @@ import {
+ export const Route = createFileRoute("/_authenticated/lancar-nota")({
+   head: () => ({
+     meta: [
+-      { title: "Lançar Nota — NF Gestão" },
++      { title: "Lançar Nota — Ofis" },
+       {
+         name: "description",
+         content: "Cadastre uma nova nota fiscal informando número, data de emissão, cliente e status.",
+       },
+-      { property: "og:title", content: "Lançar Nota — NF Gestão" },
++      { property: "og:title", content: "Lançar Nota — Ofis" },
+       {
+         property: "og:description",
+         content: "Cadastro rápido de notas fiscais emitidas pelo setor fiscal.",
+@@ -42,29 +59,49 @@ export const Route = createFileRoute("/_authenticated/lancar-nota")({
+   component: LancarNotaPage,
+ });
+ 
+-const schema = z.object({
++type Modo = "base" | "esporadico";
++
++const schemaNota = z.object({
+   numero_nf: z.string().trim().min(1, "Informe o número da NF").max(50, "Número muito longo"),
+   data_emissao: z.string().min(1, "Informe a data de emissão"),
+-  cliente: z.string().trim().min(1, "Informe a razão social do cliente").max(200, "Nome muito longo"),
+   status: z.enum(["autorizada", "cancelada", "denegada"]),
+   tipo_emissao: z.enum(["rural", "servico", "comercio"]),
+ });
+ 
+-type NotaSalva = z.infer<typeof schema>;
++type NotaSalva = z.infer<typeof schemaNota> & {
++  cliente: string;
++  esporadico: boolean;
++  valor_cobranca: number | null;
++};
+ 
+ const hoje = () => format(new Date(), "yyyy-MM-dd");
++const normalizar = (v: string) =>
++  v
++    .normalize("NFD")
++    .replace(/[̀-ͯ]/g, "")
++    .toLowerCase()
++    .trim();
+ 
+ function LancarNotaPage() {
+   const queryClient = useQueryClient();
++  const [modo, setModo] = useState<Modo>("base");
+   const [numeroNf, setNumeroNf] = useState("");
+   const [dataEmissao, setDataEmissao] = useState(hoje);
+-  const [cliente, setCliente] = useState("");
+-  const [clienteId, setClienteId] = useState<string | null>(null);
+   const [status, setStatus] = useState<StatusNota>("autorizada");
+   const [tipoEmissao, setTipoEmissao] = useState<TipoEmissao>("comercio");
+   const [loading, setLoading] = useState(false);
+   const [ultimaSalva, setUltimaSalva] = useState<NotaSalva | null>(null);
+ 
++  // Cliente da base
++  const [cliente, setCliente] = useState("");
++  const [clienteId, setClienteId] = useState<string | null>(null);
++
++  // Cliente esporádico
++  const [espNome, setEspNome] = useState("");
++  const [espDoc, setEspDoc] = useState("");
++  const [espContato, setEspContato] = useState("");
++  const [espCobranca, setEspCobranca] = useState("50,00");
++
+   const { data: notasHoje } = useQuery({
+     queryKey: ["notas-do-dia", hoje()],
+     queryFn: async () => {
+@@ -90,6 +127,18 @@ function LancarNotaPage() {
+     },
+   });
+ 
++  const { data: esporadicos } = useQuery({
++    queryKey: ["clientes-esporadicos"],
++    queryFn: async () => {
++      const { data, error } = await supabase
++        .from("clientes_esporadicos")
++        .select("*")
++        .order("nome", { ascending: true });
++      if (error) throw error;
++      return (data ?? []) as ClienteEsporadico[];
++    },
++  });
++
+   const opcoesClientes: ClienteOption[] = useMemo(() => {
+     return (clientesCadastrados ?? []).map((c) => ({
+       cliente: c.nome,
+@@ -101,12 +150,70 @@ function LancarNotaPage() {
+ 
+   const totalHoje = notasHoje?.length ?? 0;
+ 
++  // Esporádico já cadastrado com o mesmo documento: a nota vai para esse cadastro.
++  const espExistente = useMemo(() => {
++    const d = soDigitos(espDoc);
++    if (d.length !== 11 && d.length !== 14) return null;
++    return (esporadicos ?? []).find((e) => e.documento === d) ?? null;
++  }, [espDoc, esporadicos]);
++
++  // Nome parecido com um cliente da base: provavelmente não é esporádico.
++  const parecidoComBase = useMemo(() => {
++    const n = normalizar(espNome);
++    if (n.length < 4) return null;
++    return (clientesCadastrados ?? []).find((c) => normalizar(c.nome).includes(n)) ?? null;
++  }, [espNome, clientesCadastrados]);
++
++  const docDigitos = soDigitos(espDoc);
++  const docCompleto = docDigitos.length === 11 || docDigitos.length === 14;
++  const docInvalido = docCompleto && !documentoValido(docDigitos);
++  const cobrancaNum = lerReais(espCobranca);
++
++  function limparFormulario() {
++    setNumeroNf("");
++    setDataEmissao(hoje());
++    setStatus("autorizada");
++    setTipoEmissao("comercio");
++    setCliente("");
++    setClienteId(null);
++    setEspNome("");
++    setEspDoc("");
++    setEspContato("");
++    setEspCobranca("50,00");
++  }
++
++  /** Retorna o id do esporádico (existente ou recém-criado) ou null em caso de erro. */
++  async function obterEsporadicoId(): Promise<{ id: string; nome: string } | null> {
++    if (espExistente) return { id: espExistente.id, nome: espExistente.nome };
++    const { data, error } = await supabase
++      .from("clientes_esporadicos")
++      .insert({
++        nome: espNome.trim(),
++        documento: docDigitos,
++        contato: espContato.trim() || null,
++      })
++      .select("id, nome")
++      .single();
++    if (!error && data) return data as { id: string; nome: string };
++
++    // Outro usuário pode ter cadastrado o mesmo documento ao mesmo tempo.
++    if (error?.code === "23505") {
++      const { data: ja } = await supabase
++        .from("clientes_esporadicos")
++        .select("id, nome")
++        .eq("documento", docDigitos)
++        .maybeSingle();
++      if (ja) return ja as { id: string; nome: string };
++    }
++    toast.error(mensagemDeErro(error, "Não foi possível cadastrar o cliente esporádico."));
++    return null;
++  }
++
+   async function handleSubmit(e: React.FormEvent) {
+     e.preventDefault();
+-    const parsed = schema.safeParse({
++    const parsed = schemaNota.safeParse({
+       numero_nf: numeroNf,
+       data_emissao: dataEmissao,
+-      cliente,
+       status,
+       tipo_emissao: tipoEmissao,
+     });
+@@ -115,51 +222,91 @@ function LancarNotaPage() {
+       return;
+     }
+ 
++    if (modo === "base") {
++      if (!clienteId) {
++        toast.error("Selecione um cliente da lista ou marque como cliente esporádico.");
++        return;
++      }
++      setLoading(true);
++      const { error } = await supabase
++        .from("notas_fiscais")
++        .insert({ ...parsed.data, cliente, cliente_id: clienteId });
++      setLoading(false);
++      if (error) {
++        toast.error(mensagemDeErro(error, "Erro ao salvar a nota. Tente novamente."));
++        return;
++      }
++      concluir({ ...parsed.data, cliente, esporadico: false, valor_cobranca: null });
++      return;
++    }
++
++    // Modo esporádico
++    if (!espNome.trim()) {
++      toast.error("Informe o nome ou a razão social do cliente esporádico.");
++      return;
++    }
++    if (!docCompleto || docInvalido) {
++      toast.error("Informe um CPF ou CNPJ válido. O financeiro precisa dele para cobrar.");
++      return;
++    }
++    if (!Number.isFinite(cobrancaNum) || cobrancaNum < 0) {
++      toast.error("Informe o valor da cobrança desta emissão.");
++      return;
++    }
++
+     setLoading(true);
+-    const { error } = await supabase
+-      .from("notas_fiscais")
+-      .insert({ ...parsed.data, cliente_id: clienteId });
++    const esp = await obterEsporadicoId();
++    if (!esp) {
++      setLoading(false);
++      return;
++    }
++    const { error } = await supabase.from("notas_fiscais").insert({
++      ...parsed.data,
++      cliente: esp.nome,
++      cliente_esporadico_id: esp.id,
++      valor_cobranca: cobrancaNum,
++    });
+     setLoading(false);
+-
+     if (error) {
+-      toast.error("Erro ao salvar a nota. Tente novamente.");
++      toast.error(mensagemDeErro(error, "Erro ao salvar a nota. Tente novamente."));
+       return;
+     }
++    concluir({ ...parsed.data, cliente: esp.nome, esporadico: true, valor_cobranca: cobrancaNum });
++  }
+ 
+-    toast.success(`Nota ${parsed.data.numero_nf} salva com sucesso!`);
+-    setUltimaSalva(parsed.data);
+-    setNumeroNf("");
+-    setDataEmissao(hoje());
+-    setCliente("");
+-    setClienteId(null);
+-    setStatus("autorizada");
+-    setTipoEmissao("comercio");
++  function concluir(nota: NotaSalva) {
++    toast.success(
++      `Nota ${nota.numero_nf} salva${nota.esporadico ? " · cliente esporádico" : ""}.`,
++    );
++    setUltimaSalva(nota);
++    limparFormulario();
+     queryClient.invalidateQueries();
+   }
+ 
+   return (
+-    <div className="mx-auto max-w-xl space-y-6">
++    <div className="mx-auto max-w-2xl space-y-6">
+       <header>
+-        <h1 className="text-2xl font-bold text-foreground">Lançar Nota</h1>
++        <h1 className="text-2xl font-semibold text-foreground">Lançar Nota</h1>
+         <p className="text-sm text-muted-foreground">Registre uma nova nota fiscal emitida.</p>
+       </header>
+ 
+-      <Card className="hover-lift rounded-lg border-border shadow-kpi">
++      <Card className="rounded-lg border-border shadow-kpi">
+         <CardContent className="flex items-center gap-3 py-4">
+-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
++          <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+             <Gauge className="size-5" />
+           </div>
+           <div>
+             <p className="text-sm font-medium text-muted-foreground">Produtividade de hoje</p>
+             <p className="text-base font-semibold text-foreground">
+-              Você já lançou {totalHoje} {totalHoje === 1 ? "nota" : "notas"} hoje
++              Você já lançou <span className="nums">{totalHoje}</span>{" "}
++              {totalHoje === 1 ? "nota" : "notas"} hoje
+             </p>
+           </div>
+         </CardContent>
+       </Card>
+ 
+       {ultimaSalva ? (
+-        <Card className="block-in rounded-lg border-2 border-success/40 bg-success/5 shadow-card">
++        <Card className="block-in rounded-lg border border-success/40 bg-success/5 shadow-card">
+           <CardHeader className="flex-row items-start justify-between gap-2 space-y-0">
+             <div className="flex items-center gap-2">
+               <CheckCircle2 className="size-4 text-success" />
+@@ -178,22 +325,32 @@ function LancarNotaPage() {
+           <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+             <div>
+               <p className="text-xs font-medium text-muted-foreground">Número da NF</p>
+-              <p className="font-semibold text-foreground">{ultimaSalva.numero_nf}</p>
++              <p className="font-mono font-semibold text-foreground">{ultimaSalva.numero_nf}</p>
+             </div>
+             <div>
+               <p className="text-xs font-medium text-muted-foreground">Data de emissão</p>
+-              <p className="font-semibold text-foreground">
++              <p className="nums font-semibold text-foreground">
+                 {format(parseISO(ultimaSalva.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
+               </p>
+             </div>
+             <div className="sm:col-span-2">
+-              <p className="text-xs font-medium text-muted-foreground">Cliente</p>
++              <p className="text-xs font-medium text-muted-foreground">
++                Cliente{ultimaSalva.esporadico ? " esporádico" : ""}
++              </p>
+               <p className="font-semibold text-foreground">{ultimaSalva.cliente}</p>
+             </div>
+             <div className="flex items-center gap-2">
+               <StatusBadge status={ultimaSalva.status} />
+               <TipoBadge tipo={ultimaSalva.tipo_emissao} />
+             </div>
++            {ultimaSalva.esporadico && ultimaSalva.valor_cobranca != null ? (
++              <div>
++                <p className="text-xs font-medium text-muted-foreground">Cobrança</p>
++                <p className="nums font-semibold text-foreground">
++                  {formatarReais(ultimaSalva.valor_cobranca)}
++                </p>
++              </div>
++            ) : null}
+           </CardContent>
+         </Card>
+       ) : null}
+@@ -201,87 +358,256 @@ function LancarNotaPage() {
+       <Card className="rounded-lg border-border shadow-card">
+         <CardHeader>
+           <CardTitle className="text-base">Dados da nota</CardTitle>
+-          <CardDescription>Todos os campos são obrigatórios.</CardDescription>
++          <CardDescription>Todos os campos são obrigatórios, exceto o contato.</CardDescription>
+         </CardHeader>
+         <CardContent>
+           <form onSubmit={handleSubmit} className="space-y-5">
+             <div className="space-y-2">
+-              <Label htmlFor="numero_nf">Número da NF</Label>
+-              <Input
+-                id="numero_nf"
+-                value={numeroNf}
+-                onChange={(e) => setNumeroNf(e.target.value)}
+-                placeholder="Ex.: 000123456"
+-                maxLength={50}
+-              />
++              <span className="text-sm font-medium">Quem é o cliente?</span>
++              <div
++                role="group"
++                aria-label="Tipo de cliente"
++                className="inline-flex w-full rounded-lg border border-border bg-muted p-1 sm:w-auto"
++              >
++                {(
++                  [
++                    ["base", "Cliente da base", Users],
++                    ["esporadico", "Cliente esporádico", UserPlus],
++                  ] as const
++                ).map(([valor, rotulo, Icone]) => (
++                  <button
++                    key={valor}
++                    type="button"
++                    aria-pressed={modo === valor}
++                    onClick={() => setModo(valor)}
++                    className={cn(
++                      "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors sm:flex-none",
++                      "aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card",
++                    )}
++                  >
++                    <Icone className="size-4" />
++                    {rotulo}
++                  </button>
++                ))}
++              </div>
+             </div>
+ 
+-            <div className="space-y-2">
+-              <Label htmlFor="data_emissao">Data de emissão</Label>
+-              <Input
+-                id="data_emissao"
+-                type="date"
+-                value={dataEmissao}
+-                onChange={(e) => setDataEmissao(e.target.value)}
+-              />
++            {modo === "base" ? (
++              <div className="space-y-2">
++                <Label htmlFor="cliente">Cliente (razão social)</Label>
++                <ClienteCombobox
++                  value={cliente}
++                  onChange={(v) => {
++                    setCliente(v);
++                    const exato = opcoesClientes.find(
++                      (o) => normalizar(o.cliente) === normalizar(v),
++                    );
++                    setClienteId(exato?.id ?? null);
++                  }}
++                  options={opcoesClientes}
++                  loading={loadingClientes}
++                  onSelect={(option) => {
++                    setCliente(option.cliente);
++                    setClienteId(option.id ?? null);
++                    setTipoEmissao(option.tipoPrincipal);
++                  }}
++                />
++                <p className="text-xs text-muted-foreground">
++                  {cliente && !clienteId
++                    ? "Cliente não encontrado na base. Selecione da lista ou use “Cliente esporádico”."
++                    : "Selecione um cliente cadastrado para preencher o tipo de emissão automaticamente."}
++                </p>
++              </div>
++            ) : (
++              <div className="space-y-4 rounded-lg border border-dashed border-border p-4">
++                <p className="flex items-start gap-2 text-sm text-muted-foreground">
++                  <UserPlus className="mt-0.5 size-4 shrink-0" />
++                  Cliente que não é da carteira do escritório. Ele vai para a base separada de{" "}
++                  clientes esporádicos e entra no relatório do financeiro.
++                </p>
++
++                <div className="space-y-2">
++                  <Label htmlFor="esp_nome">Nome / razão social</Label>
++                  <Input
++                    id="esp_nome"
++                    value={espNome}
++                    onChange={(e) => setEspNome(e.target.value)}
++                    maxLength={200}
++                    placeholder="Nome completo ou razão social"
++                    autoComplete="off"
++                  />
++                  {parecidoComBase ? (
++                    <p className="text-xs text-warning">
++                      Parece cliente da base: {parecidoComBase.nome}.{" "}
++                      <button
++                        type="button"
++                        className="font-medium text-primary underline-offset-2 hover:underline"
++                        onClick={() => {
++                          setModo("base");
++                          setCliente(parecidoComBase.nome);
++                          setClienteId(parecidoComBase.id);
++                          setTipoEmissao(parecidoComBase.tipo_emissao);
++                        }}
++                      >
++                        Usar cliente da base
++                      </button>
++                    </p>
++                  ) : null}
++                </div>
++
++                <div className="grid gap-4 sm:grid-cols-2">
++                  <div className="space-y-2">
++                    <Label htmlFor="esp_doc">CPF ou CNPJ</Label>
++                    <Input
++                      id="esp_doc"
++                      value={espDoc}
++                      onChange={(e) => {
++                        const masc = mascararDocumento(e.target.value);
++                        setEspDoc(masc);
++                        const d = soDigitos(masc);
++                        const ja = (esporadicos ?? []).find((x) => x.documento === d);
++                        if (ja) {
++                          if (!espNome.trim()) setEspNome(ja.nome);
++                          if (!espContato.trim() && ja.contato) setEspContato(ja.contato);
++                        }
++                      }}
++                      inputMode="numeric"
++                      className="font-mono"
++                      placeholder="000.000.000-00"
++                      aria-invalid={docInvalido || undefined}
++                    />
++                    <p
++                      className={cn(
++                        "text-xs",
++                        docInvalido
++                          ? "text-destructive"
++                          : espExistente
++                            ? "text-success"
++                            : "text-muted-foreground",
++                      )}
++                    >
++                      {docInvalido
++                        ? "CPF/CNPJ inválido. Confira os números."
++                        : espExistente
++                          ? `Já cadastrado: ${espExistente.nome}. A nota vai para este cadastro.`
++                          : docCompleto
++                            ? "Novo cliente esporádico: será cadastrado ao salvar."
++                            : "O financeiro precisa do documento para cobrar."}
++                    </p>
++                  </div>
++                  <div className="space-y-2">
++                    <Label htmlFor="esp_contato">
++                      Contato <span className="font-normal text-muted-foreground">(opcional)</span>
++                    </Label>
++                    <Input
++                      id="esp_contato"
++                      value={espContato}
++                      onChange={(e) => setEspContato(e.target.value)}
++                      maxLength={200}
++                      placeholder="Telefone ou e-mail"
++                    />
++                  </div>
++                </div>
++
++                <div className="space-y-2 sm:max-w-[calc(50%-0.5rem)]">
++                  <Label htmlFor="esp_cobranca">Cobrança desta emissão</Label>
++                  <div className="relative">
++                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
++                      R$
++                    </span>
++                    <Input
++                      id="esp_cobranca"
++                      value={espCobranca}
++                      onChange={(e) => setEspCobranca(e.target.value)}
++                      inputMode="decimal"
++                      className="nums pl-9"
++                    />
++                  </div>
++                  <p
++                    className={cn(
++                      "text-xs",
++                      Number.isFinite(cobrancaNum) && cobrancaNum !== COBRANCA_PADRAO
++                        ? "text-warning"
++                        : "text-muted-foreground",
++                    )}
++                  >
++                    {!Number.isFinite(cobrancaNum)
++                      ? "Informe um valor."
++                      : cobrancaNum !== COBRANCA_PADRAO
++                        ? `Diferente do padrão: ${formatarReais(cobrancaNum)}`
++                        : `Padrão ${formatarReais(COBRANCA_PADRAO)}. Mude só se esta for diferente.`}
++                  </p>
++                </div>
++              </div>
++            )}
++
++            <div className="grid gap-5 sm:grid-cols-2">
++              <div className="space-y-2">
++                <Label htmlFor="numero_nf">Número da NF</Label>
++                <Input
++                  id="numero_nf"
++                  value={numeroNf}
++                  onChange={(e) => setNumeroNf(e.target.value)}
++                  placeholder="Ex.: 000123456"
++                  className="font-mono"
++                  maxLength={50}
++                />
++              </div>
++
++              <div className="space-y-2">
++                <Label htmlFor="data_emissao">Data de emissão</Label>
++                <Input
++                  id="data_emissao"
++                  type="date"
++                  value={dataEmissao}
++                  onChange={(e) => setDataEmissao(e.target.value)}
++                />
++              </div>
++
++              <div className="space-y-2">
++                <Label htmlFor="tipo_emissao">Tipo de Emissão</Label>
++                <Select value={tipoEmissao} onValueChange={(v) => setTipoEmissao(v as TipoEmissao)}>
++                  <SelectTrigger id="tipo_emissao">
++                    <SelectValue />
++                  </SelectTrigger>
++                  <SelectContent>
++                    <SelectItem value="comercio">Comércio</SelectItem>
++                    <SelectItem value="servico">Serviço</SelectItem>
++                    <SelectItem value="rural">Rural</SelectItem>
++                  </SelectContent>
++                </Select>
++              </div>
++
++              <div className="space-y-2">
++                <Label htmlFor="status">Status</Label>
++                <Select value={status} onValueChange={(v) => setStatus(v as StatusNota)}>
++                  <SelectTrigger id="status">
++                    <SelectValue />
++                  </SelectTrigger>
++                  <SelectContent>
++                    <SelectItem value="autorizada">Autorizada</SelectItem>
++                    <SelectItem value="cancelada">Cancelada</SelectItem>
++                    <SelectItem value="denegada">Denegada</SelectItem>
++                  </SelectContent>
++                </Select>
++              </div>
+             </div>
+ 
+-            <div className="space-y-2">
+-              <Label htmlFor="cliente">Cliente (razão social)</Label>
+-              <ClienteCombobox
+-                value={cliente}
+-                onChange={(v) => {
+-                  setCliente(v);
+-                  // Texto digitado manualmente não vincula a um cliente cadastrado.
+-                  const exato = opcoesClientes.find((o) => o.cliente === v);
+-                  setClienteId(exato?.id ?? null);
+-                }}
+-                options={opcoesClientes}
+-                loading={loadingClientes}
+-                onSelect={(option) => {
+-                  setCliente(option.cliente);
+-                  setClienteId(option.id ?? null);
+-                  setTipoEmissao(option.tipoPrincipal);
+-                }}
+-              />
++            {modo === "esporadico" && espExistente ? (
+               <p className="text-xs text-muted-foreground">
+-                Selecione um cliente já cadastrado para preencher o tipo de emissão
+-                automaticamente.
++                Documento {formatarDocumento(espExistente.documento)} já está na base de esporádicos.
+               </p>
+-            </div>
+-
+-            <div className="space-y-2">
+-              <Label htmlFor="status">Status</Label>
+-              <Select value={status} onValueChange={(v) => setStatus(v as StatusNota)}>
+-                <SelectTrigger id="status">
+-                  <SelectValue />
+-                </SelectTrigger>
+-                <SelectContent>
+-                  <SelectItem value="autorizada">Autorizada</SelectItem>
+-                  <SelectItem value="cancelada">Cancelada</SelectItem>
+-                  <SelectItem value="denegada">Denegada</SelectItem>
+-                </SelectContent>
+-              </Select>
+-            </div>
++            ) : null}
+ 
+-            <div className="space-y-2">
+-              <Label htmlFor="tipo_emissao">Tipo de Emissão</Label>
+-              <Select value={tipoEmissao} onValueChange={(v) => setTipoEmissao(v as TipoEmissao)}>
+-                <SelectTrigger id="tipo_emissao">
+-                  <SelectValue />
+-                </SelectTrigger>
+-                <SelectContent>
+-                  <SelectItem value="comercio">Comércio</SelectItem>
+-                  <SelectItem value="servico">Serviço</SelectItem>
+-                  <SelectItem value="rural">Rural</SelectItem>
+-                </SelectContent>
+-              </Select>
++            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
++              <Button type="button" variant="ghost" onClick={limparFormulario} disabled={loading}>
++                Limpar
++              </Button>
++              <Button type="submit" disabled={loading} className="sm:min-w-40">
++                {loading && <Loader2 className="animate-spin" />}
++                Salvar Nota
++              </Button>
+             </div>
+-
+-            <Button type="submit" className="w-full" disabled={loading}>
+-              {loading && <Loader2 className="animate-spin" />}
+-              Salvar Nota
+-            </Button>
+           </form>
+         </CardContent>
+       </Card>
+diff --git a/src/routes/_authenticated/mei.tsx b/src/routes/_authenticated/mei.tsx
+index 1c1102f..f469af4 100644
+--- a/src/routes/_authenticated/mei.tsx
++++ b/src/routes/_authenticated/mei.tsx
+@@ -44,13 +44,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/mei")({
+   head: () => ({
+     meta: [
+-      { title: "Controle MEI — NF Gestão" },
++      { title: "Controle MEI — Ofis" },
+       {
+         name: "description",
+         content:
+           "Acompanhe o faturamento anual dos clientes MEI, o percentual do limite utilizado e os alertas de desenquadramento.",
+       },
+-      { property: "og:title", content: "Controle MEI — NF Gestão" },
++      { property: "og:title", content: "Controle MEI — Ofis" },
+       {
+         property: "og:description",
+         content: "Faturamento acumulado, limite anual e alertas de risco para clientes MEI.",
+diff --git a/src/routes/_authenticated/notas-do-dia.tsx b/src/routes/_authenticated/notas-do-dia.tsx
+index b840be1..de25be1 100644
+--- a/src/routes/_authenticated/notas-do-dia.tsx
++++ b/src/routes/_authenticated/notas-do-dia.tsx
+@@ -24,12 +24,12 @@ import {
+ export const Route = createFileRoute("/_authenticated/notas-do-dia")({
+   head: () => ({
+     meta: [
+-      { title: "Notas do Dia — NF Gestão" },
++      { title: "Notas do Dia — Ofis" },
+       {
+         name: "description",
+         content: "Todas as notas fiscais emitidas hoje, atualizadas em tempo real.",
+       },
+-      { property: "og:title", content: "Notas do Dia — NF Gestão" },
++      { property: "og:title", content: "Notas do Dia — Ofis" },
+       {
+         property: "og:description",
+         content: "Acompanhe em tempo real as notas fiscais emitidas no dia.",
+diff --git a/src/routes/_authenticated/obrigacoes.tsx b/src/routes/_authenticated/obrigacoes.tsx
+index 7131806..7d96b7e 100644
+--- a/src/routes/_authenticated/obrigacoes.tsx
++++ b/src/routes/_authenticated/obrigacoes.tsx
+@@ -53,13 +53,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/obrigacoes")({
+   head: () => ({
+     meta: [
+-      { title: "Obrigações Acessórias — NF Gestão" },
++      { title: "Obrigações Acessórias — Ofis" },
+       {
+         name: "description",
+         content:
+           "Controle de obrigações acessórias: DAS, PGDAS, DCTF, EFD, SPED e DEFIS com vencimentos, status e alertas semanais.",
+       },
+-      { property: "og:title", content: "Obrigações Acessórias — NF Gestão" },
++      { property: "og:title", content: "Obrigações Acessórias — Ofis" },
+       {
+         property: "og:description",
+         content: "Vencimentos, entregas e atrasos das obrigações acessórias por cliente.",
+diff --git a/src/routes/_authenticated/rentabilidade.tsx b/src/routes/_authenticated/rentabilidade.tsx
+index 83c0c03..7afe191 100644
+--- a/src/routes/_authenticated/rentabilidade.tsx
++++ b/src/routes/_authenticated/rentabilidade.tsx
+@@ -53,13 +53,13 @@ import {
+ export const Route = createFileRoute("/_authenticated/rentabilidade")({
+   head: () => ({
+     meta: [
+-      { title: "Rentabilidade — NF Gestão" },
++      { title: "Rentabilidade — Ofis" },
+       {
+         name: "description",
+         content:
+           "Painel de rentabilidade: complexidade por cliente e score de esforço calculado com notas, obrigações e comunicações.",
+       },
+-      { property: "og:title", content: "Rentabilidade — NF Gestão" },
++      { property: "og:title", content: "Rentabilidade — Ofis" },
+       {
+         property: "og:description",
+         content: "Score de esforço e complexidade de atendimento por cliente.",
+diff --git a/src/routes/_authenticated/tarefas.tsx b/src/routes/_authenticated/tarefas.tsx
+index 8be6435..0f4eaab 100644
+--- a/src/routes/_authenticated/tarefas.tsx
++++ b/src/routes/_authenticated/tarefas.tsx
+@@ -85,13 +85,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
+ export const Route = createFileRoute("/_authenticated/tarefas")({
+   head: () => ({
+     meta: [
+-      { title: "Tarefas do Dia — NF Gestão" },
++      { title: "Tarefas do Dia — Ofis" },
+       {
+         name: "description",
+         content:
+           "Organize e acompanhe as tarefas do setor fiscal por prioridade, categoria e status.",
+       },
+-      { property: "og:title", content: "Tarefas do Dia — NF Gestão" },
++      { property: "og:title", content: "Tarefas do Dia — Ofis" },
+       {
+         property: "og:description",
+         content: "Checklist diário do setor fiscal com progresso, insights e histórico.",
+diff --git a/src/routes/auth.tsx b/src/routes/auth.tsx
+index 65eaf04..f23ab17 100644
+--- a/src/routes/auth.tsx
++++ b/src/routes/auth.tsx
+@@ -12,15 +12,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
+ export const Route = createFileRoute("/auth")({
+   head: () => ({
+     meta: [
+-      { title: "Entrar — NF Gestão" },
++      { title: "Entrar — Ofis" },
+       {
+         name: "description",
+         content: "Acesso restrito ao setor fiscal. Entre com seu e-mail e senha para gerenciar as notas fiscais.",
+       },
+-      { property: "og:title", content: "Entrar — NF Gestão" },
++      { property: "og:title", content: "Entrar — Ofis" },
+       {
+         property: "og:description",
+-        content: "Acesso restrito ao setor fiscal do sistema NF Gestão.",
++        content: "Acesso restrito ao setor fiscal do sistema Ofis.",
+       },
+     ],
+   }),
+@@ -66,7 +66,7 @@ function AuthPage() {
+           <div className="flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+             <ReceiptText className="size-6" />
+           </div>
+-          <h1 className="text-2xl font-bold text-foreground">NF Gestão</h1>
++          <h1 className="text-2xl font-bold text-foreground">Ofis</h1>
+           <p className="text-sm text-muted-foreground">Gestão de notas fiscais emitidas</p>
+         </div>
+ 
+diff --git a/src/routes/index.tsx b/src/routes/index.tsx
+index e5b4acb..9b4dc94 100644
+--- a/src/routes/index.tsx
++++ b/src/routes/index.tsx
+@@ -3,13 +3,13 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
+ export const Route = createFileRoute("/")({
+   head: () => ({
+     meta: [
+-      { title: "NF Gestão — Controle de Notas Fiscais" },
++      { title: "Ofis — Controle de Notas Fiscais" },
+       {
+         name: "description",
+         content:
+           "Sistema para o setor fiscal lançar e acompanhar notas fiscais emitidas, com dashboard de volume e status.",
+       },
+-      { property: "og:title", content: "NF Gestão — Controle de Notas Fiscais" },
++      { property: "og:title", content: "Ofis — Controle de Notas Fiscais" },
+       {
+         property: "og:description",
+         content: "Lance e acompanhe as notas fiscais emitidas pelo seu setor fiscal.",
+diff --git a/src/styles.css b/src/styles.css
+index c59d503..4d5fe33 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -1,21 +1,27 @@
+ @import "tailwindcss" source(none);
+ @source "../src";
+ @import "tw-animate-css";
+-@import "@fontsource-variable/inter";
++@import "@fontsource-variable/inter"; /* reserva caso a Geist (Google Fonts, ver __root.tsx) não carregue */
+ 
+ @custom-variant dark (&:is(.dark *));
+ 
+ /*
+- * Design system — NF Gestão (azul fiscal, sério e profissional).
+- * Todas as cores em oklch. Novos tokens: registrar em @theme inline.
++ * Design system — Ofis.
++ * Fonte da verdade: docs/design-system/tokens.json (gerado em tokens.css).
++ * Três camadas de cor que NUNCA se misturam:
++ *   1. status (success / warning / destructive)
++ *   2. categoria (tipo-comercio / tipo-servico / tipo-rural)
++ *   3. marca (primary / accent)
++ * Novos tokens: registrar em @theme inline.
+  */
+ 
+ @theme inline {
+-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+-  --radius-sm: 4px;
+-  --radius-md: 6px;
+-  --radius-lg: 8px;
+-  --radius-xl: 12px;
++  --font-sans: "Geist", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
++  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
++  --radius-sm: 6px;
++  --radius-md: 8px;
++  --radius-lg: 10px;
++  --radius-xl: 16px;
+   --radius-2xl: 16px;
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+@@ -68,91 +74,114 @@
+   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+   --color-sidebar-border: var(--sidebar-border);
+   --color-sidebar-ring: var(--sidebar-ring);
+-  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.08);
+-  --shadow-elevated: 0 4px 16px oklch(0.346 0.074 256 / 0.12);
+-  --shadow-kpi: 0 2px 10px -2px oklch(0.346 0.074 256 / 0.14);
+-  --shadow-kpi-hover: 0 12px 26px -8px oklch(0.346 0.074 256 / 0.28);
++  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06);
++  --shadow-elevated: 0 12px 32px rgb(0 0 0 / 0.18);
++  --shadow-kpi: 0 1px 2px rgb(0 0 0 / 0.06);
++  --shadow-kpi-hover: 0 8px 20px -8px rgb(0 0 0 / 0.25);
+ }
+ 
+ :root {
+-  --radius: 8px;
+-  --background: oklch(0.984 0.003 247.9);
+-  --foreground: oklch(0.208 0.04 265.8);
+-  --card: oklch(1 0 0);
+-  --card-foreground: oklch(0.208 0.04 265.8);
+-  --popover: oklch(1 0 0);
+-  --popover-foreground: oklch(0.208 0.04 265.8);
+-  --primary: oklch(0.346 0.074 256);
+-  --primary-foreground: oklch(1 0 0);
+-  --primary-hover: oklch(0.29 0.059 254.4);
+-  --secondary: oklch(0.968 0.007 247.9);
+-  --secondary-foreground: oklch(0.346 0.074 256);
+-  --muted: oklch(0.968 0.007 247.9);
+-  --muted-foreground: oklch(0.554 0.041 257.4);
+-  --accent: oklch(0.95 0.015 250);
+-  --accent-foreground: oklch(0.346 0.074 256);
+-  --destructive: oklch(0.577 0.215 27.3);
+-  --destructive-foreground: oklch(1 0 0);
+-  --success: oklch(0.627 0.17 149.2);
+-  --success-foreground: oklch(1 0 0);
+-  --warning: oklch(0.646 0.194 41.1);
+-  --warning-foreground: oklch(1 0 0);
+-  --tipo-comercio: oklch(0.346 0.074 256);
+-  --tipo-servico: oklch(0.531 0.252 300.1);
+-  --tipo-rural: oklch(0.527 0.146 150.1);
+-  --tipo-foreground: oklch(1 0 0);
+-  --border: oklch(0.929 0.013 255.5);
+-  --input: oklch(0.929 0.013 255.5);
+-  --ring: oklch(0.346 0.074 256);
+-  --chart-1: oklch(0.627 0.17 149.2);
+-  --chart-2: oklch(0.577 0.215 27.3);
+-  --chart-3: oklch(0.646 0.194 41.1);
+-  --chart-4: oklch(0.346 0.074 256);
+-  --chart-5: oklch(0.554 0.041 257.4);
+-  --row-hover: oklch(0.972 0.017 245);
+-  --nav-1: oklch(0.78 0.14 220);
+-  --nav-2: oklch(0.83 0.15 90);
+-  --nav-3: oklch(0.8 0.14 155);
+-  --nav-4: oklch(0.78 0.13 300);
+-  --nav-5: oklch(0.82 0.14 40);
+-  --nav-6: oklch(0.86 0.16 85);
+-  --nav-7: oklch(0.8 0.13 190);
+-  --nav-8: oklch(0.8 0.14 340);
+-  --sidebar: oklch(0.346 0.074 256);
+-  --sidebar-foreground: oklch(0.98 0.005 250);
+-  --sidebar-primary: oklch(1 0 0);
+-  --sidebar-primary-foreground: oklch(0.346 0.074 256);
+-  --sidebar-accent: oklch(0.29 0.059 254.4);
+-  --sidebar-accent-foreground: oklch(1 0 0);
+-  --sidebar-border: oklch(0.29 0.059 254.4);
+-  --sidebar-ring: oklch(0.8 0.02 250);
+-  --gradient-sidebar: linear-gradient(
+-    170deg,
+-    oklch(0.346 0.074 256) 0%,
+-    oklch(0.262 0.055 257) 100%
+-  );
++  /* Tema CLARO (off-white). O padrão do Ofis é o escuro: classe .dark no <html>. */
++  --radius: 10px;
++  --background: #F4F2EE;
++  --foreground: #18181B;
++  --card: #FAF9F6;
++  --card-foreground: #18181B;
++  --popover: #FAF9F6;
++  --popover-foreground: #18181B;
++  --primary: #2563EB;
++  --primary-foreground: #FFFFFF;
++  --primary-hover: #1D4ED8;
++  --secondary: #EFEDE8;
++  --secondary-foreground: #18181B;
++  --muted: #EFEDE8;
++  --muted-foreground: #5F5F68;
++  --accent: #E6ECF8;
++  --accent-foreground: #1D4ED8;
++  --destructive: #B91C1C;
++  --destructive-foreground: #FFFFFF;
++  --success: #146C33;
++  --success-foreground: #FFFFFF;
++  --warning: #8A5A06;
++  --warning-foreground: #FFFFFF;
++  /* Camada de CATEGORIA (tipo de emissão) — nunca usar para status nem para marca. */
++  --tipo-comercio: #0E7490;
++  --tipo-servico: #6D28D9;
++  --tipo-rural: #7A621D;
++  --tipo-foreground: #FFFFFF;
++  --border: #E2DFD8;
++  --input: #81818A;
++  --ring: #2563EB;
++  --chart-1: #146C33;
++  --chart-2: #B91C1C;
++  --chart-3: #8A5A06;
++  --chart-4: #2563EB;
++  --chart-5: #A1A1AA;
++  --row-hover: #EFEDE8;
++  /* Ícones do menu: neutros (o design system não usa uma cor por item). */
++  --nav-1: currentColor;
++  --nav-2: currentColor;
++  --nav-3: currentColor;
++  --nav-4: currentColor;
++  --nav-5: currentColor;
++  --nav-6: currentColor;
++  --nav-7: currentColor;
++  --nav-8: currentColor;
++  --sidebar: #EDEBE6;
++  --sidebar-foreground: #18181B;
++  --sidebar-primary: #2563EB;
++  --sidebar-primary-foreground: #FFFFFF;
++  --sidebar-accent: #E2DFD8;
++  --sidebar-accent-foreground: #18181B;
++  --sidebar-border: #E2DFD8;
++  --sidebar-ring: #2563EB;
++  --gradient-sidebar: linear-gradient(var(--sidebar), var(--sidebar));
+ }
+ 
+ .dark {
+-  --background: oklch(0.208 0.04 265.8);
+-  --foreground: oklch(0.984 0.003 247.9);
+-  --card: oklch(0.25 0.04 262);
+-  --card-foreground: oklch(0.984 0.003 247.9);
+-  --popover: oklch(0.25 0.04 262);
+-  --popover-foreground: oklch(0.984 0.003 247.9);
+-  --primary: oklch(0.62 0.09 250);
+-  --primary-foreground: oklch(0.15 0.03 262);
+-  --primary-hover: oklch(0.68 0.09 250);
+-  --secondary: oklch(0.279 0.041 260);
+-  --secondary-foreground: oklch(0.984 0.003 247.9);
+-  --muted: oklch(0.279 0.041 260);
+-  --muted-foreground: oklch(0.704 0.04 256.8);
+-  --accent: oklch(0.279 0.041 260);
+-  --accent-foreground: oklch(0.984 0.003 247.9);
+-  --border: oklch(1 0 0 / 12%);
+-  --input: oklch(1 0 0 / 15%);
+-  --ring: oklch(0.62 0.09 250);
+-  --row-hover: oklch(0.3 0.045 258);
++  /* Tema ESCURO — padrão do Ofis. */
++  --background: #161618;
++  --foreground: #F4F4F5;
++  --card: #1C1C1F;
++  --card-foreground: #F4F4F5;
++  --popover: #242428;
++  --popover-foreground: #F4F4F5;
++  --primary: #2563EB;
++  --primary-foreground: #FFFFFF;
++  --primary-hover: #1D4ED8;
++  --secondary: #242428;
++  --secondary-foreground: #F4F4F5;
++  --muted: #242428;
++  --muted-foreground: #8F8F98;
++  --accent: #172338;
++  --accent-foreground: #7DB2FF;
++  --destructive: #DC2626;
++  --destructive-foreground: #FFFFFF;
++  --success: #4ADE80;
++  --success-foreground: #0B1A10;
++  --warning: #FBBF24;
++  --warning-foreground: #1A1405;
++  --tipo-comercio: #67D4E6;
++  --tipo-servico: #BBA8FF;
++  --tipo-rural: #D8C38E;
++  --tipo-foreground: #101012;
++  --border: #2A2A2E;
++  --input: #75757E;
++  --ring: #7DB2FF;
++  --chart-1: #4ADE80;
++  --chart-2: #F87171;
++  --chart-3: #FBBF24;
++  --chart-4: #2563EB;
++  --chart-5: #5C5C63;
++  --row-hover: #202024;
++  --sidebar: #101012;
++  --sidebar-foreground: #F4F4F5;
++  --sidebar-primary: #7DB2FF;
++  --sidebar-primary-foreground: #101012;
++  --sidebar-accent: #1C1C1F;
++  --sidebar-accent-foreground: #F4F4F5;
++  --sidebar-border: #2A2A2E;
++  --sidebar-ring: #7DB2FF;
+ }
+ 
+ @layer base {
+@@ -174,6 +203,39 @@
+     font-weight: 600;
+     letter-spacing: -0.01em;
+   }
++
++  /* Barras de rolagem discretas, no tom do tema. */
++  * {
++    scrollbar-width: thin;
++    scrollbar-color: var(--color-border) transparent;
++  }
++
++  :focus-visible {
++    outline: 2px solid var(--color-ring);
++    outline-offset: 2px;
++  }
++
++  @media (prefers-reduced-motion: reduce) {
++    *,
++    *::before,
++    *::after {
++      animation-duration: 0.01ms !important;
++      transition-duration: 0.01ms !important;
++    }
++  }
++}
++
++/* Números alinhados (valores, NF, datas). */
++@utility nums {
++  font-variant-numeric: tabular-nums;
++}
++
++/* Rolagem sem barra visível (menu lateral). */
++@utility scroll-oculto {
++  scrollbar-width: none;
++  &::-webkit-scrollbar {
++    display: none;
++  }
+ }
+ 
+ @keyframes row-in {

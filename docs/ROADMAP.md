@@ -1,0 +1,60 @@
+# Roadmap — o que já está no código e o que falta
+
+A referência visual e de comportamento de **todas** as telas é `docs/previa/ofis-previa.html`
+(abra no navegador; é a prévia aprovada pelo João). O código real ainda não tem tudo que a prévia mostra.
+
+## ✅ Feito neste pacote (11/11/2026)
+
+1. **Design system aplicado** (`src/styles.css`): tokens novos, tema escuro como padrão, tema claro em off-white,
+   fontes Geist e Geist Mono (Google Fonts, em `__root.tsx`), selos de status e de tipo no padrão do design system.
+2. **Troca de tema** sem "piscar" (`src/lib/tema.ts` + script em `__root.tsx`), salva no navegador.
+3. **Menu lateral novo** (`src/components/app-sidebar.tsx`): nome Ofis, grupos (Operação, Clientes, Fiscal, Análises),
+   recolher/expandir (Ctrl+B, salvo no navegador), seletor de tema, sem barra de rolagem.
+4. **Lançar Nota** com "Cliente da base / Cliente esporádico": cadastro automático do esporádico (CPF/CNPJ com máscara
+   e validação, reaproveita cadastro existente pelo documento), cobrança por emissão (padrão R$ 50), aviso quando o nome
+   parece de um cliente da base, erros do banco em português.
+5. **Página Esporádicos** (`/esporadicos`): filtros por período, busca, a repassar/repassadas/todas, seleção,
+   "marcar como repassadas" com desfazer, relatório em PDF e mensagem pronta para o financeiro, base de esporádicos.
+6. Nome **Ofis** em todos os títulos e no PDF mensal.
+7. Excluir cliente com notas mostra uma mensagem clara em vez de erro genérico.
+
+## ⚠️ Primeiro passo obrigatório no Claude Code
+
+O pacote foi montado **sem conseguir instalar as dependências** (rede bloqueada no ambiente onde foi gerado).
+A sintaxe de todos os arquivos alterados foi verificada, mas **o build e a checagem de tipos não rodaram**. Antes de qualquer coisa:
+
+```sh
+bun install        # ou npm install
+bun run build      # tem que passar sem erros
+bun run lint
+bun run dev        # e testar: login, Lançar Nota (os dois modos), Esporádicos, troca de tema, menu recolhido
+```
+Se o `routeTree.gen.ts` reclamar, rode `bun run dev` uma vez: o plugin do TanStack Router o regenera.
+
+**Este pacote parte do código de 03/11/2026.** Se o repositório no GitHub tiver mudanças depois dessa data,
+não copie os arquivos por cima: aplique `docs/mudancas-desde-03-11.patch` (`git apply --3way docs/mudancas-desde-03-11.patch`)
+na versão atual e resolva os conflitos.
+
+## 🔜 Próximos (na ordem sugerida)
+
+1. **Tela de equipe** (admin): listar membros, ativar/desativar, mudar papel. Tabela `equipe` já existe.
+2. **Telas da prévia ainda não portadas** — comparar cada uma com `docs/previa/ofis-previa.html`:
+   - Página do cliente MEI (clicar no cliente abre notas, % do limite e barra de progresso; faixas 60/85/100% em `lib/mei.ts`,
+     a prévia usa 80/100 — **João precisa decidir**).
+   - Relatório mensal do cliente (seções, marca do escritório, cor, PDF e mensagem para o cliente).
+   - Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado.
+   - Lançar Nota "em sequência" (Enter lança e continua com o mesmo cliente; lista "Lançadas agora").
+   - Restyle das demais páginas com os componentes do design system (`docs/design-system/`).
+3. **Clientes com vários tipos de emissão** na tela de Clientes (`tipos_emissao` já existe no banco; a tela usa só `tipo_emissao`).
+4. **CPF/CNPJ em clientes** da base (coluna nova + máscara/validação reaproveitando `lib/esporadicos.ts`).
+5. Trocar todas as mensagens `error.message` cruas (inglês do Postgres) por `mensagemDeErro()`.
+6. Mover URL/chave do Supabase para variáveis de ambiente (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) na Vercel.
+7. Tela de auditoria (quem alterou o quê), lendo `public.auditoria`.
+8. Logo definitiva (prompt pronto com o João; trocar o ícone `ReceiptText` do menu, do login e o favicon).
+
+## Decisões já tomadas pelo João (não reabrir)
+- Toda nota precisa estar ligada a um cliente da base ou a um esporádico. Nome solto não existe.
+- Valor da nota **não** é guardado. Só a cobrança de esporádicos.
+- Esporádico é cobrado por emissão; padrão R$ 50, às vezes R$ 100 (por isso o valor é por nota).
+- Pares "Rural" são clientes separados. Os demais duplicados foram juntados.
+- Sistema é **interno**: cadastro aberto desligado, acesso só por convite.
