@@ -16,6 +16,7 @@ import { KpiCard, type KpiTrend } from "@/components/kpi-card";
 import { EmptyState } from "@/components/empty-state";
 import { FilaDoDia } from "@/components/fila-do-dia";
 import { cn } from "@/lib/utils";
+import { useLargura } from "@/lib/use-largura";
 import {
   Table,
   TableBody,
@@ -304,7 +305,7 @@ function DashboardPage() {
                     </div>
                   ))}
                 </div>
-                <p className="mt-5 text-[13px] leading-[18px] text-muted-foreground">
+                <p className="mt-5 text-sm text-muted-foreground">
                   <span className="nums">{k.mes.length}</span>{" "}
                   {k.mes.length === 1 ? "nota emitida" : "notas emitidas"} em{" "}
                   {format(hoje, "MMMM", { locale: ptBR })}, até hoje
@@ -349,8 +350,8 @@ function DashboardPage() {
                     <TableRow>
                       <TableHead>Nº</TableHead>
                       <TableHead>Cliente</TableHead>
-                      <TableHead>Emissão</TableHead>
-                      <TableHead>Tipo</TableHead>
+                      <TableHead className="hidden sm:table-cell">Emissão</TableHead>
+                      <TableHead className="hidden md:table-cell">Tipo</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -358,13 +359,13 @@ function DashboardPage() {
                     {(ultimas ?? []).map((n) => (
                       <TableRow key={n.id}>
                         <TableCell className="font-mono text-sm">{n.numero_nf}</TableCell>
-                        <TableCell className="max-w-[16rem] truncate font-medium text-foreground">
+                        <TableCell className="max-w-[10rem] truncate font-medium text-foreground sm:max-w-[16rem]">
                           {n.cliente}
                         </TableCell>
-                        <TableCell className="nums text-muted-foreground">
+                        <TableCell className="nums hidden text-muted-foreground sm:table-cell">
                           {format(new Date(`${n.data_emissao}T12:00:00`), "dd/MM/yyyy")}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <TipoBadge tipo={n.tipo_emissao} />
                         </TableCell>
                         <TableCell>
@@ -416,9 +417,9 @@ function DashboardPage() {
 
 /** Barras neutras; a última (hoje / mês atual) em destaque com a cor de marca. */
 function GraficoBarras({ serie }: { serie: { rotulo: string; valor: number }[] }) {
-  const W = 700;
+  const [ref, W] = useLargura<HTMLDivElement>(700);
   const H = 170;
-  const x0 = 44;
+  const x0 = W < 480 ? 32 : 44;
   const n = serie.length;
   const passo = (W - x0 - 8) / n;
   const larg = Math.min(56, passo * 0.62);
@@ -431,78 +432,84 @@ function GraficoBarras({ serie }: { serie: { rotulo: string; valor: number }[] }
   for (let v = 0; v <= max; v += degrau) linhas.push(v);
 
   return (
-    <svg
-      viewBox={`0 0 ${W} 220`}
-      className="h-auto w-full"
-      role="img"
-      aria-label="Notas por período"
-    >
-      {linhas.map((v) => (
-        <g key={v}>
-          <line
-            x1={x0 - 6}
-            x2={W - 8}
-            y1={y(v)}
-            y2={y(v)}
-            className="stroke-border"
-            strokeWidth={1}
-          />
-          <text
-            x={x0 - 14}
-            y={y(v) + 4}
-            textAnchor="end"
-            className="nums fill-muted-foreground text-[12px]"
-          >
-            {v}
-          </text>
-        </g>
-      ))}
-      {serie.map((s, i) => {
-        const x = x0 + i * passo + (passo - larg) / 2;
-        const atual = i === n - 1;
-        return (
-          <g key={s.rotulo + i}>
-            {s.valor > 0 ? (
-              <rect
-                x={x}
-                y={y(s.valor)}
-                width={larg}
-                height={16 + H - y(s.valor)}
-                rx={8}
-                className={atual ? "fill-primary" : "fill-chart-5"}
-              >
-                <title>
-                  {s.rotulo}: {s.valor} {s.valor === 1 ? "nota" : "notas"}
-                </title>
-              </rect>
-            ) : null}
-            {s.valor > 0 ? (
-              <text
-                x={x + larg / 2}
-                y={y(s.valor) - 6}
-                textAnchor="middle"
-                className={cn(
-                  "nums text-[12px]",
-                  atual ? "fill-foreground font-semibold" : "fill-muted-foreground",
-                )}
-              >
-                {s.valor}
-              </text>
-            ) : null}
+    <div ref={ref} className="w-full">
+      <svg
+        viewBox={`0 0 ${W} 220`}
+        width={W}
+        height={220}
+        className="block max-w-full"
+        role="img"
+        aria-label="Notas por período"
+      >
+        {linhas.map((v) => (
+          <g key={v}>
+            <line
+              x1={x0 - 6}
+              x2={W - 8}
+              y1={y(v)}
+              y2={y(v)}
+              className="stroke-border"
+              strokeWidth={1}
+            />
             <text
-              x={x + larg / 2}
-              y={16 + H + 24}
-              textAnchor="middle"
-              className={cn(
-                "text-[12px]",
-                atual ? "fill-foreground font-medium" : "fill-muted-foreground",
-              )}
+              x={x0 - 14}
+              y={y(v) + 4}
+              textAnchor="end"
+              className="nums fill-muted-foreground text-[12px]"
             >
-              {s.rotulo}
+              {v}
             </text>
           </g>
-        );
-      })}
-    </svg>
+        ))}
+        {serie.map((s, i) => {
+          const x = x0 + i * passo + (passo - larg) / 2;
+          const atual = i === n - 1;
+          return (
+            <g key={s.rotulo + i}>
+              {s.valor > 0 ? (
+                <rect
+                  x={x}
+                  y={y(s.valor)}
+                  width={larg}
+                  height={16 + H - y(s.valor)}
+                  rx={Math.min(8, larg / 3)}
+                  className={atual ? "fill-primary" : "fill-chart-5"}
+                >
+                  <title>
+                    {s.rotulo}: {s.valor} {s.valor === 1 ? "nota" : "notas"}
+                  </title>
+                </rect>
+              ) : null}
+              {s.valor > 0 ? (
+                <text
+                  x={x + larg / 2}
+                  y={y(s.valor) - 6}
+                  textAnchor="middle"
+                  className={cn(
+                    "nums text-[12px]",
+                    atual ? "fill-foreground font-semibold" : "fill-muted-foreground",
+                  )}
+                >
+                  {s.valor}
+                </text>
+              ) : null}
+              <text
+                x={x + larg / 2}
+                y={16 + H + 24}
+                textAnchor="middle"
+                className={cn(
+                  "text-[12px]",
+                  atual ? "fill-foreground font-medium" : "fill-muted-foreground",
+                )}
+              >
+                {passo < 30 && n > 7
+                  ? s.rotulo.charAt(0).toUpperCase() + (s.rotulo.endsWith("*") ? "*" : "")
+                  : s.rotulo}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
   );
 }

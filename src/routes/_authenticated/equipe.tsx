@@ -159,10 +159,10 @@ function EquipePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Pessoa</TableHead>
-                    <TableHead className="w-48">Papel</TableHead>
-                    <TableHead>Situação</TableHead>
-                    <TableHead>Último acesso</TableHead>
-                    <TableHead>Na equipe desde</TableHead>
+                    <TableHead className="w-36 sm:w-48">Papel</TableHead>
+                    <TableHead className="hidden sm:table-cell">Situação</TableHead>
+                    <TableHead className="hidden md:table-cell">Último acesso</TableHead>
+                    <TableHead className="hidden lg:table-cell">Na equipe desde</TableHead>
                     <TableHead className="text-right">
                       <span className="sr-only">Ações</span>
                     </TableHead>
@@ -218,15 +218,17 @@ function EquipePage() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {m.ativo ? (
                             <StatusPill tom="success">Ativo</StatusPill>
                           ) : (
                             <StatusPill tom="neutro">Sem acesso</StatusPill>
                           )}
                         </TableCell>
-                        <TableCell className="nums text-sm">{dataHora(m.ultimo_acesso)}</TableCell>
-                        <TableCell className="nums text-sm">
+                        <TableCell className="nums hidden text-sm md:table-cell">
+                          {dataHora(m.ultimo_acesso)}
+                        </TableCell>
+                        <TableCell className="nums hidden text-sm lg:table-cell">
                           {format(parseISO(m.criado_em), "dd/MM/yyyy")}
                         </TableCell>
                         <TableCell className="text-right">

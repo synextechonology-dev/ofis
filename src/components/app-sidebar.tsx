@@ -52,6 +52,19 @@ export function AppSidebar() {
     }
   }, []);
 
+  // Menu do celular: Esc fecha e a página de trás não rola enquanto ele está aberto.
+  useEffect(() => {
+    if (!open) return;
+    const onEsc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const overflowAntes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      document.body.style.overflow = overflowAntes;
+      window.removeEventListener("keydown", onEsc);
+    };
+  }, [open]);
+
   // Atalhos: Ctrl/Cmd + B (ou "[" pelos atalhos globais) recolhe ou abre o menu.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -167,7 +180,7 @@ export function AppSidebar() {
               {compacto ? (
                 <div className="mx-2 my-2 h-px bg-sidebar-border first:hidden" />
               ) : (
-                <p className="px-3 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/50">
+                <p className="px-3 pb-1.5 text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
                   {grupo.titulo}
                 </p>
               )}
@@ -318,7 +331,16 @@ export function AppSidebar() {
         >
           {open ? <X /> : <Menu />}
         </Button>
-        <span className="font-semibold">Ofis</span>
+        <span className="flex-1 font-semibold">Ofis</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-sidebar-foreground hover:bg-sidebar-accent"
+          onClick={abrirBusca}
+          aria-label="Busca geral"
+        >
+          <Search />
+        </Button>
       </header>
       <div
         className={cn(
@@ -334,8 +356,13 @@ export function AppSidebar() {
           onClick={() => setOpen(false)}
         />
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          aria-hidden={!open}
+          inert={!open}
           className={cn(
-            "absolute inset-y-0 left-0 w-[248px] shadow-elevated transition-transform",
+            "absolute inset-y-0 left-0 w-[min(280px,85vw)] shadow-elevated transition-transform",
             open ? "translate-x-0" : "-translate-x-full",
           )}
         >

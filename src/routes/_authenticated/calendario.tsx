@@ -211,7 +211,7 @@ function CalendarioPage() {
                     <span key={d}>{d}</span>
                   ))}
                 </div>
-                <div className="grid grid-cols-7 gap-1">
+                <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                   {dias.map((dia) => {
                     const key = iso(dia);
                     const doMes = isSameMonth(dia, mesRef);
@@ -224,12 +224,15 @@ function CalendarioPage() {
                     return (
                       <button
                         key={key}
+                        type="button"
+                        aria-pressed={ativo}
+                        aria-label={`${format(dia, "d 'de' MMMM", { locale: ptBR })}${evs.length ? `, ${evs.length} evento(s)` : ""}${qtdNotas ? `, ${qtdNotas} nota(s)` : ""}${pendentes ? `, ${pendentes} tarefa(s) pendente(s)` : ""}`}
                         onClick={() => {
                           setDiaSelecionado(key);
                           setDataEvento(key);
                         }}
                         className={cn(
-                          "flex min-h-20 flex-col gap-1 rounded-md border border-border p-1.5 text-left transition-colors hover:bg-row-hover",
+                          "flex min-h-14 min-w-0 flex-col gap-0.5 rounded-md border border-border p-1 text-left transition-colors hover:bg-row-hover sm:min-h-20 sm:gap-1 sm:p-1.5",
                           !doMes && "opacity-45",
                           ativo && "border-primary bg-primary/5",
                         )}
@@ -255,7 +258,7 @@ function CalendarioPage() {
                                   TIPO_EVENTO_META[ev.tipo].dotClass,
                                 )}
                               />
-                              <span className="truncate">{ev.titulo}</span>
+                              <span className="hidden truncate sm:inline">{ev.titulo}</span>
                             </span>
                           ))}
                           {evs.length > 1 ? (
@@ -264,7 +267,7 @@ function CalendarioPage() {
                             </span>
                           ) : null}
                         </div>
-                        <div className="mt-auto flex items-center gap-1.5">
+                        <div className="mt-auto flex flex-wrap items-center gap-x-1.5">
                           {qtdNotas > 0 ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
                               <span className="size-1.5 rounded-full bg-success" />

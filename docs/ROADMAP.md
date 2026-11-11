@@ -50,7 +50,10 @@ na versão atual e resolva os conflitos.
      padrões do design system: pílulas de status, etiquetas neutras, sem animações/emoji/borda lateral).
      Ainda não portado da prévia: painel lateral de detalhes da nota (Notas do Dia) e foco automático nos
      formulários a partir da busca geral.
-3. **Clientes com vários tipos de emissão** na tela de Clientes (`tipos_emissao` já existe no banco; a tela usa só `tipo_emissao`).
+   - ~~Responsividade~~ ✅ feita em 11/11/2026 (menu do celular, cards, diálogos, abas, gráficos que desenham
+     na largura real, colunas secundárias escondidas em telas pequenas).
+3. ~~**Clientes com vários tipos de emissão**~~ ✅ feito em 11/11/2026 (cadastro e "Editar tipos"; o primeiro é o
+   principal, sugerido no Lançar Nota).
 4. **CPF/CNPJ em clientes** da base (coluna nova + máscara/validação reaproveitando `lib/esporadicos.ts`).
 5. Trocar todas as mensagens `error.message` cruas (inglês do Postgres) por `mensagemDeErro()`.
 6. Mover URL/chave do Supabase para variáveis de ambiente (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) na Vercel.

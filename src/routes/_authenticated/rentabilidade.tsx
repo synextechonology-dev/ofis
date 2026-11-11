@@ -368,21 +368,21 @@ function RentabilidadePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Tipo emissão</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo emissão</TableHead>
                     <TableHead>Complexidade</TableHead>
-                    <TableHead className="text-right">Score</TableHead>
-                    <TableHead>Nível demanda</TableHead>
+                    <TableHead className="hidden text-right sm:table-cell">Score</TableHead>
+                    <TableHead className="hidden sm:table-cell">Nível demanda</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {linhas.map((l, index) => {
+                  {linhas.map((l) => {
                     const classe = classePorCliente.get(l.cliente.id);
                     const nivel = nivelDemanda(l.score);
                     return (
-                      <TableRow key={l.cliente.id} className="">
-                        <TableCell className="font-medium">{l.cliente.nome}</TableCell>
-                        <TableCell>
+                      <TableRow key={l.cliente.id}>
+                        <TableCell className="min-w-32 font-medium">{l.cliente.nome}</TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <TipoBadge tipo={l.cliente.tipo_emissao} />
                         </TableCell>
                         <TableCell>
@@ -408,8 +408,10 @@ function RentabilidadePage() {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="text-right font-semibold">{l.score}</TableCell>
-                        <TableCell>
+                        <TableCell className="nums hidden text-right font-semibold sm:table-cell">
+                          {l.score}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge
                             className={`rounded-md border-transparent font-medium ${nivel.className}`}
                           >

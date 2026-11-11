@@ -446,7 +446,7 @@ function RelatoriosPage() {
           </CardContent>
         </Card>
 
-        <div className="flex min-w-0 flex-1 basis-[560px] justify-center overflow-auto rounded-lg border border-border bg-sidebar p-4 sm:p-8">
+        <div className="flex min-w-0 flex-1 basis-[560px] justify-center overflow-auto rounded-lg border border-border bg-sidebar p-2 sm:p-8">
           {!dados || carregandoExtras ? (
             <Skeleton className="h-[900px] w-full max-w-[720px]" />
           ) : (
@@ -474,7 +474,7 @@ function RelatoriosPage() {
             onChange={(e) => setMensagem(e.target.value)}
             rows={9}
           />
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:gap-2">
             <Button variant="ghost" onClick={() => setDialogo(false)}>
               Fechar
             </Button>
@@ -565,7 +565,7 @@ function Folha({
 
   return (
     <article
-      className="flex min-h-[900px] w-full max-w-[720px] flex-col rounded bg-white px-8 pb-7 pt-10 text-[12.5px] leading-[18px] shadow-[0_12px_32px_rgba(0,0,0,.25)] sm:px-12"
+      className="flex w-full max-w-[720px] flex-col rounded bg-white px-5 pb-7 pt-8 sm:min-h-[900px] sm:px-12 sm:pt-10 text-[12.5px] leading-[18px] shadow-[0_12px_32px_rgba(0,0,0,.25)] sm:px-12"
       style={{ color: PAPEL.texto }}
       aria-label="Prévia do relatório"
     >
@@ -588,7 +588,7 @@ function Folha({
         </div>
       </header>
 
-      <div className="mb-1.5 mt-5 flex items-end justify-between gap-3">
+      <div className="mb-1.5 mt-5 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
         <div>
           <div className="text-xl font-semibold leading-[26px] tracking-tight">
             {d.cliente.nome}
@@ -604,7 +604,12 @@ function Folha({
 
       {secoes.resumo ? (
         <Secao titulo="Resumo do mês">
-          <div className={cn("grid gap-2.5", d.mei ? "grid-cols-3" : "grid-cols-2")}>
+          <div
+            className={cn(
+              "grid gap-2.5",
+              d.mei ? "grid-cols-1 min-[480px]:grid-cols-3" : "grid-cols-1 min-[400px]:grid-cols-2",
+            )}
+          >
             {d.mei && d.faturamentoMes !== null ? (
               <Kpi rotulo="Faturamento lançado" valor={moeda(d.faturamentoMes)}>
                 <Variacao v={varFat} casas={1} />
@@ -681,7 +686,7 @@ function Folha({
       {secoes.limite ? (
         d.mei ? (
           <Secao titulo="Limite anual do MEI">
-            <div className="flex justify-between gap-3">
+            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1">
               <span>
                 Acumulado em {d.ano} até {MESES_LONGOS[d.mes - 1]!.toLowerCase()}
               </span>
@@ -778,7 +783,7 @@ function Folha({
       ) : null}
 
       <footer
-        className="mt-auto flex justify-between gap-3 pt-4 text-[11px]"
+        className="mt-auto flex flex-wrap justify-between gap-x-3 gap-y-1 pt-4 text-[11px]"
         style={{ color: PAPEL.cinza, borderTop: `1px solid ${PAPEL.linha}` }}
       >
         <span>{[escritorio.nome, escritorio.contato].filter(Boolean).join(" · ")}</span>

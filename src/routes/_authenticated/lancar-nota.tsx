@@ -844,7 +844,7 @@ function LancarNotaPage() {
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex h-5 items-center rounded border border-border bg-secondary px-1.5 font-sans text-[11px] font-medium text-muted-foreground">
+    <kbd className="inline-flex h-5 items-center rounded border border-border bg-secondary px-1.5 font-sans text-xs font-medium text-muted-foreground">
       {children}
     </kbd>
   );

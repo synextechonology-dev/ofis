@@ -203,7 +203,7 @@ function NotasDoDiaPage() {
       <Card className="rounded-lg border-border shadow-card">
         <CardContent className="space-y-4 pt-6">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-56 flex-1 space-y-1.5">
+            <div className="w-full space-y-1.5 sm:w-auto sm:min-w-56 sm:flex-1">
               <Label htmlFor="nd-busca">Buscar</Label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -216,7 +216,7 @@ function NotasDoDiaPage() {
                 />
               </div>
             </div>
-            <div className="w-44 space-y-1.5">
+            <div className="w-full space-y-1.5 sm:w-44">
               <Label htmlFor="nd-tipo">Tipo</Label>
               <Select value={tipo} onValueChange={(v) => setTipo(v as "todos" | TipoEmissao)}>
                 <SelectTrigger id="nd-tipo">
@@ -283,9 +283,9 @@ function NotasDoDiaPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nº NF</TableHead>
-                      <TableHead>Lançamento</TableHead>
+                      <TableHead className="hidden sm:table-cell">Lançamento</TableHead>
                       <TableHead>Cliente</TableHead>
-                      <TableHead>Tipo</TableHead>
+                      <TableHead className="hidden md:table-cell">Tipo</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">
                         <span className="sr-only">Ações</span>
@@ -296,10 +296,10 @@ function NotasDoDiaPage() {
                     {linhas.map((nota) => (
                       <TableRow key={nota.id}>
                         <TableCell className="font-mono text-sm">{nota.numero_nf}</TableCell>
-                        <TableCell className="nums text-muted-foreground">
+                        <TableCell className="nums hidden text-muted-foreground sm:table-cell">
                           {format(parseISO(nota.criado_em), "HH:mm")}
                         </TableCell>
-                        <TableCell className="max-w-[20rem]">
+                        <TableCell className="max-w-[12rem] sm:max-w-[20rem]">
                           <span className="flex items-center gap-2">
                             <span className="truncate font-medium text-foreground">
                               {nomeCliente(nota)}
@@ -311,7 +311,7 @@ function NotasDoDiaPage() {
                             ) : null}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <TipoBadge tipo={nota.tipo_emissao} />
                         </TableCell>
                         <TableCell>
@@ -345,7 +345,7 @@ function Resumo({ rotulo, children }: { rotulo: string; children: React.ReactNod
   return (
     <Card className="rounded-lg border-border shadow-kpi">
       <CardContent className="space-y-1.5 py-4">
-        <p className="text-[13px] font-medium text-muted-foreground">{rotulo}</p>
+        <p className="text-sm font-medium text-muted-foreground">{rotulo}</p>
         {children}
       </CardContent>
     </Card>

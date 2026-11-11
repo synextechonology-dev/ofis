@@ -295,11 +295,14 @@ function AnalisesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-16">Posição</TableHead>
+                    <TableHead className="w-12 sm:w-16">
+                      <span className="sm:hidden">#</span>
+                      <span className="hidden sm:inline">Posição</span>
+                    </TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Tipo de Emissão</TableHead>
-                    <TableHead className="text-right">Qtd Notas</TableHead>
-                    <TableHead className="text-right">% do Total</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo de emissão</TableHead>
+                    <TableHead className="text-right">Notas</TableHead>
+                    <TableHead className="hidden text-right sm:table-cell">% do total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -308,18 +311,20 @@ function AnalisesPage() {
                       <TableCell className="font-semibold text-muted-foreground">
                         {index + 1}º
                       </TableCell>
-                      <TableCell className="max-w-[18rem] truncate font-medium">
+                      <TableCell className="max-w-[10rem] truncate font-medium sm:max-w-[18rem]">
                         {item.cliente}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <div className="flex flex-wrap gap-1">
                           {item.tipos.map((tipo) => (
                             <TipoBadge key={tipo} tipo={tipo} />
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{item.quantidade}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">
+                      <TableCell className="nums text-right font-semibold">
+                        {item.quantidade}
+                      </TableCell>
+                      <TableCell className="nums hidden text-right text-muted-foreground sm:table-cell">
                         {percentual(item.quantidade, totalRanking)}
                       </TableCell>
                     </TableRow>

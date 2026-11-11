@@ -232,7 +232,7 @@ function HistoricoPage() {
       ) : null}
 
       <Card className="rounded-lg border-border shadow-card">
-        <CardContent className="grid gap-4 py-5 sm:grid-cols-2 md:items-end lg:grid-cols-4">
+        <CardContent className="grid grid-cols-2 gap-3 py-5 sm:gap-4 md:items-end lg:grid-cols-4">
           <div className="space-y-2">
             <Label htmlFor="inicio">Data início</Label>
             <Input
@@ -323,7 +323,7 @@ function HistoricoPage() {
                       <TableHead>Nº NF</TableHead>
                       <TableHead>Emissão</TableHead>
                       <TableHead>Cliente</TableHead>
-                      <TableHead>Tipo</TableHead>
+                      <TableHead className="hidden md:table-cell">Tipo</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">
                         <span className="sr-only">Ações</span>
@@ -337,10 +337,10 @@ function HistoricoPage() {
                         <TableCell className="nums text-muted-foreground">
                           {format(parseISO(nota.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
-                        <TableCell className="max-w-[18rem] truncate font-medium text-foreground">
+                        <TableCell className="max-w-[10rem] truncate font-medium text-foreground sm:max-w-[18rem]">
                           {nomeCliente(nota)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <TipoBadge tipo={nota.tipo_emissao} />
                         </TableCell>
                         <TableCell>

@@ -613,24 +613,24 @@ function TarefasPage() {
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Data</TableHead>
+                                  <TableHead className="hidden md:table-cell">Data</TableHead>
                                   <TableHead>Título</TableHead>
-                                  <TableHead>Categoria</TableHead>
+                                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
                                   <TableHead>Prioridade</TableHead>
                                   <TableHead>Status</TableHead>
-                                  <TableHead>Conclusão</TableHead>
+                                  <TableHead className="hidden sm:table-cell">Conclusão</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {doDia.map((t) => (
                                   <TableRow key={t.id}>
-                                    <TableCell>
+                                    <TableCell className="nums hidden md:table-cell">
                                       {format(parseISO(t.data_tarefa), "dd/MM/yyyy")}
                                     </TableCell>
-                                    <TableCell className="max-w-[18rem] truncate font-medium">
+                                    <TableCell className="max-w-[10rem] truncate font-medium sm:max-w-[18rem]">
                                       {t.titulo}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden sm:table-cell">
                                       <CategoriaBadge categoria={t.categoria} />
                                     </TableCell>
                                     <TableCell>
@@ -639,7 +639,7 @@ function TarefasPage() {
                                     <TableCell>
                                       <StatusTarefaBadge status={t.status} />
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="nums hidden sm:table-cell">
                                       {t.concluida_em
                                         ? format(parseISO(t.concluida_em), "HH:mm")
                                         : "—"}

@@ -246,10 +246,10 @@ function ObrigacoesPage() {
             <TableRow>
               <TableHead>Cliente</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Competência</TableHead>
+              <TableHead className="hidden md:table-cell">Competência</TableHead>
               <TableHead>Vencimento</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Observação</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
+              <TableHead className="hidden lg:table-cell">Observação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -269,7 +269,7 @@ function ObrigacoesPage() {
                     {TIPO_OBRIGACAO_META[o.tipo]?.label ?? o.tipo}
                   </Badge>
                 </TableCell>
-                <TableCell className="nums text-muted-foreground">
+                <TableCell className="nums hidden text-muted-foreground md:table-cell">
                   {format(parseISO(o.competencia), "MM/yyyy", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
@@ -278,7 +278,7 @@ function ObrigacoesPage() {
                     <Urgencia o={o} />
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge
                     className={cn(
                       "rounded-full border-transparent font-medium",
@@ -289,7 +289,7 @@ function ObrigacoesPage() {
                     {STATUS_OBRIGACAO_META[o.status]?.label ?? o.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="max-w-56 truncate text-muted-foreground">
+                <TableCell className="hidden max-w-56 truncate text-muted-foreground lg:table-cell">
                   {o.observacao || "—"}
                 </TableCell>
                 <TableCell>

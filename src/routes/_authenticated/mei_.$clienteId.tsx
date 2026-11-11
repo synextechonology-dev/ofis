@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useLargura } from "@/lib/use-largura";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
@@ -215,13 +216,13 @@ function MeiClientePage() {
             <div>
               <p className="text-sm text-muted-foreground">Uso do limite anual</p>
               <div className="mt-1 flex items-baseline gap-3">
-                <span className="nums text-4xl font-semibold tracking-tight text-foreground">
+                <span className="nums text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                   {formatarPct(pct, 1)}
                 </span>
                 <StatusPill tom={faixa.tom}>{faixa.label}</StatusPill>
               </div>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="nums text-lg font-semibold text-foreground">
                 {moeda(acumulado)}{" "}
                 <span className="font-normal text-muted-foreground">de {moeda(limite)}</span>
@@ -588,7 +589,7 @@ function GraficoMeses({
   mesAtual: number;
   mediaPermitida: number;
 }) {
-  const W = 640;
+  const [ref, W] = useLargura<HTMLDivElement>(640);
   const H = 170;
   const x0 = 56;
   const passo = (W - x0) / 12;
@@ -600,69 +601,80 @@ function GraficoMeses({
   for (let v = 0; v <= max; v += degrau) linhas.push(v);
 
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H + 40}`}
-      className="h-auto w-full"
-      role="img"
-      aria-label="Faturamento por mês"
-    >
-      {linhas.map((v) => (
-        <g key={v}>
-          <line x1={x0 - 6} x2={W} y1={y(v)} y2={y(v)} className="stroke-border" strokeWidth={1} />
-          <text
-            x={x0 - 10}
-            y={y(v) + 4}
-            textAnchor="end"
-            className="nums fill-muted-foreground text-[12px]"
-          >
-            {v ? `${(v / 1000).toLocaleString("pt-BR")} mil` : "0"}
-          </text>
-        </g>
-      ))}
-      {porMes.map((v, k) => {
-        const x = x0 + k * passo + (passo - larg) / 2;
-        const atual = k + 1 === mesAtual;
-        return (
-          <g key={k}>
-            {v > 0 ? (
-              <rect
-                x={x}
-                y={y(v)}
-                width={larg}
-                height={12 + H - y(v)}
-                rx={6}
-                className={atual ? "fill-primary" : "fill-chart-5"}
-              >
-                <title>
-                  {MESES_CURTOS[k]}: {moeda(v)}
-                </title>
-              </rect>
-            ) : null}
+    <div ref={ref} className="w-full">
+      <svg
+        viewBox={`0 0 ${W} ${H + 40}`}
+        width={W}
+        height={H + 40}
+        className="block max-w-full"
+        role="img"
+        aria-label="Faturamento por mês"
+      >
+        {linhas.map((v) => (
+          <g key={v}>
+            <line
+              x1={x0 - 6}
+              x2={W}
+              y1={y(v)}
+              y2={y(v)}
+              className="stroke-border"
+              strokeWidth={1}
+            />
             <text
-              x={x + larg / 2}
-              y={12 + H + 20}
-              textAnchor="middle"
-              className={
-                atual
-                  ? "fill-foreground text-[12px] font-medium"
-                  : "fill-muted-foreground text-[12px]"
-              }
+              x={x0 - 10}
+              y={y(v) + 4}
+              textAnchor="end"
+              className="nums fill-muted-foreground text-[12px]"
             >
-              {MESES_CURTOS[k]}
+              {v ? `${(v / 1000).toLocaleString("pt-BR")} mil` : "0"}
             </text>
           </g>
-        );
-      })}
-      <line
-        x1={x0 - 6}
-        x2={W}
-        y1={y(mediaPermitida)}
-        y2={y(mediaPermitida)}
-        className="stroke-warning"
-        strokeWidth={1.5}
-        strokeDasharray="5 4"
-      />
-    </svg>
+        ))}
+        {porMes.map((v, k) => {
+          const x = x0 + k * passo + (passo - larg) / 2;
+          const atual = k + 1 === mesAtual;
+          return (
+            <g key={k}>
+              {v > 0 ? (
+                <rect
+                  x={x}
+                  y={y(v)}
+                  width={larg}
+                  height={12 + H - y(v)}
+                  rx={Math.min(6, larg / 3)}
+                  className={atual ? "fill-primary" : "fill-chart-5"}
+                >
+                  <title>
+                    {MESES_CURTOS[k]}: {moeda(v)}
+                  </title>
+                </rect>
+              ) : null}
+              <text
+                x={x + larg / 2}
+                y={12 + H + 20}
+                textAnchor="middle"
+                className={
+                  atual
+                    ? "fill-foreground text-[12px] font-medium"
+                    : "fill-muted-foreground text-[12px]"
+                }
+              >
+                {passo < 30 ? MESES_CURTOS[k]?.charAt(0).toUpperCase() : MESES_CURTOS[k]}
+              </text>
+            </g>
+          );
+        })}
+        <line
+          x1={x0 - 6}
+          x2={W}
+          y1={y(mediaPermitida)}
+          y2={y(mediaPermitida)}
+          className="stroke-warning"
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+        />
+      </svg>
+    </div>
   );
 }
 

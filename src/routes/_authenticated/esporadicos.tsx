@@ -234,7 +234,7 @@ function EsporadicosPage() {
             financeiro para cobrança.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
           <Button variant="outline" onClick={() => setDialogo(true)} disabled={!doRelatorio.length}>
             <FileDown />
             Gerar relatório
@@ -288,7 +288,7 @@ function EsporadicosPage() {
       <Card className="rounded-lg border-border shadow-card">
         <CardContent className="space-y-4 pt-6">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-56 flex-1 space-y-1.5">
+            <div className="w-full space-y-1.5 sm:w-auto sm:min-w-56 sm:flex-1">
               <Label htmlFor="esp-busca">Buscar</Label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -301,7 +301,7 @@ function EsporadicosPage() {
                 />
               </div>
             </div>
-            <div className="w-52 space-y-1.5">
+            <div className="w-full space-y-1.5 sm:w-52">
               <Label htmlFor="esp-periodo">Período</Label>
               <Select
                 value={periodo}
@@ -390,10 +390,10 @@ function EsporadicosPage() {
                       />
                     </TableHead>
                     <TableHead>Nº NF</TableHead>
-                    <TableHead>Emissão</TableHead>
+                    <TableHead className="hidden sm:table-cell">Emissão</TableHead>
                     <TableHead>Cliente</TableHead>
-                    <TableHead>Contato</TableHead>
-                    <TableHead>Tipo</TableHead>
+                    <TableHead className="hidden lg:table-cell">Contato</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
                     <TableHead className="text-right">Cobrança</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Financeiro</TableHead>
@@ -417,19 +417,19 @@ function EsporadicosPage() {
                           ) : null}
                         </TableCell>
                         <TableCell className="font-mono text-sm">{l.numero_nf}</TableCell>
-                        <TableCell className="nums">
+                        <TableCell className="nums hidden sm:table-cell">
                           {format(parseISO(l.data_emissao), "dd/MM/yyyy")}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="min-w-40">
                           <div className="font-medium text-foreground">{l.nome}</div>
                           <div className="font-mono text-xs text-muted-foreground">
                             {formatarDocumento(l.documento)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
                           {l.contato || "—"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <TipoBadge tipo={l.tipo_emissao} />
                         </TableCell>
                         <TableCell className="nums text-right">
@@ -438,7 +438,7 @@ function EsporadicosPage() {
                         <TableCell>
                           <StatusBadge status={l.status} />
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="whitespace-nowrap text-sm">
                           {l.repassado_financeiro_em ? (
                             <span className="text-success">
                               Repassada {format(parseISO(l.repassado_financeiro_em), "dd/MM")}
@@ -471,7 +471,7 @@ function EsporadicosPage() {
       </Card>
 
       <Card className="rounded-lg border-border shadow-card">
-        <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="flex items-center gap-2 text-base">
             <UserPlus className="size-4 text-muted-foreground" />
             Base de esporádicos
@@ -492,9 +492,9 @@ function EsporadicosPage() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>CPF / CNPJ</TableHead>
-                    <TableHead>Contato</TableHead>
+                    <TableHead className="hidden md:table-cell">Contato</TableHead>
                     <TableHead className="text-right">Notas</TableHead>
-                    <TableHead>Última nota</TableHead>
+                    <TableHead className="hidden sm:table-cell">Última nota</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -506,11 +506,11 @@ function EsporadicosPage() {
                         <TableCell className="font-mono text-sm">
                           {formatarDocumento(e.documento)}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                           {e.contato || "—"}
                         </TableCell>
                         <TableCell className="nums text-right">{c?.n ?? 0}</TableCell>
-                        <TableCell className="nums">
+                        <TableCell className="nums hidden sm:table-cell">
                           {c ? format(parseISO(c.ultima), "dd/MM/yyyy") : "—"}
                         </TableCell>
                       </TableRow>
