@@ -46,7 +46,10 @@ na versão atual e resolva os conflitos.
    - ~~Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado~~ ✅ feita em 11/11/2026
      (`components/busca-geral.tsx`; lista de telas em `lib/navegacao.ts`, usada pelo menu e pela busca).
    - ~~Lançar Nota "em sequência"~~ ✅ feito em 11/11/2026 (sem campo de valor; número sugerido e aviso de repetida).
-   - Restyle das demais páginas com os componentes do design system (`docs/design-system/`).
+   - ~~Restyle das demais páginas~~ ✅ feito em 11/11/2026 (Dashboard no layout da prévia; demais telas com os
+     padrões do design system: pílulas de status, etiquetas neutras, sem animações/emoji/borda lateral).
+     Ainda não portado da prévia: painel lateral de detalhes da nota (Notas do Dia) e foco automático nos
+     formulários a partir da busca geral.
 3. **Clientes com vários tipos de emissão** na tela de Clientes (`tipos_emissao` já existe no banco; a tela usa só `tipo_emissao`).
 4. **CPF/CNPJ em clientes** da base (coluna nova + máscara/validação reaproveitando `lib/esporadicos.ts`).
 5. Trocar todas as mensagens `error.message` cruas (inglês do Postgres) por `mensagemDeErro()`.
