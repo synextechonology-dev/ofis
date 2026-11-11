@@ -24,6 +24,7 @@ import { Route as AuthenticatedLancarNotaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMeiRouteImport } from './routes/_authenticated/mei'
 import { Route as AuthenticatedNotasDoDiaRouteImport } from './routes/_authenticated/notas-do-dia'
 import { Route as AuthenticatedObrigacoesRouteImport } from './routes/_authenticated/obrigacoes'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedRentabilidadeRouteImport } from './routes/_authenticated/rentabilidade'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedMeiClienteIdRouteImport } from './routes/_authenticated/mei_.$clienteId'
@@ -104,6 +105,11 @@ const AuthenticatedObrigacoesRoute = AuthenticatedObrigacoesRouteImport.update({
   path: '/obrigacoes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRentabilidadeRoute =
   AuthenticatedRentabilidadeRouteImport.update({
     id: '/rentabilidade',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/mei': typeof AuthenticatedMeiRoute
   '/notas-do-dia': typeof AuthenticatedNotasDoDiaRoute
   '/obrigacoes': typeof AuthenticatedObrigacoesRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/rentabilidade': typeof AuthenticatedRentabilidadeRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/mei/$clienteId': typeof AuthenticatedMeiClienteIdRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/mei': typeof AuthenticatedMeiRoute
   '/notas-do-dia': typeof AuthenticatedNotasDoDiaRoute
   '/obrigacoes': typeof AuthenticatedObrigacoesRoute
+  '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/rentabilidade': typeof AuthenticatedRentabilidadeRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/mei/$clienteId': typeof AuthenticatedMeiClienteIdRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/_authenticated/mei': typeof AuthenticatedMeiRoute
   '/_authenticated/notas-do-dia': typeof AuthenticatedNotasDoDiaRoute
   '/_authenticated/obrigacoes': typeof AuthenticatedObrigacoesRoute
+  '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/rentabilidade': typeof AuthenticatedRentabilidadeRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/mei_/$clienteId': typeof AuthenticatedMeiClienteIdRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/mei'
     | '/notas-do-dia'
     | '/obrigacoes'
+    | '/relatorios'
     | '/rentabilidade'
     | '/tarefas'
     | '/mei/$clienteId'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/mei'
     | '/notas-do-dia'
     | '/obrigacoes'
+    | '/relatorios'
     | '/rentabilidade'
     | '/tarefas'
     | '/mei/$clienteId'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mei'
     | '/_authenticated/notas-do-dia'
     | '/_authenticated/obrigacoes'
+    | '/_authenticated/relatorios'
     | '/_authenticated/rentabilidade'
     | '/_authenticated/tarefas'
     | '/_authenticated/mei_/$clienteId'
@@ -355,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObrigacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rentabilidade': {
       id: '/_authenticated/rentabilidade'
       path: '/rentabilidade'
@@ -392,6 +411,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMeiRoute: typeof AuthenticatedMeiRoute
   AuthenticatedNotasDoDiaRoute: typeof AuthenticatedNotasDoDiaRoute
   AuthenticatedObrigacoesRoute: typeof AuthenticatedObrigacoesRoute
+  AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedRentabilidadeRoute: typeof AuthenticatedRentabilidadeRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedMeiClienteIdRoute: typeof AuthenticatedMeiClienteIdRoute
@@ -410,6 +430,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMeiRoute: AuthenticatedMeiRoute,
   AuthenticatedNotasDoDiaRoute: AuthenticatedNotasDoDiaRoute,
   AuthenticatedObrigacoesRoute: AuthenticatedObrigacoesRoute,
+  AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedRentabilidadeRoute: AuthenticatedRentabilidadeRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedMeiClienteIdRoute: AuthenticatedMeiClienteIdRoute,

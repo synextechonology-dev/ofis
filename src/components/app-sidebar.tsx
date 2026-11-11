@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   ReceiptText,
+  Receipt,
   ClipboardList,
   TrendingUp,
   FileCheck,
@@ -70,6 +71,7 @@ const GRUPOS: { titulo: string; itens: ItemNav[] }[] = [
     itens: [
       { to: "/analises", label: "Análises", icon: BarChart3 },
       { to: "/rentabilidade", label: "Rentabilidade", icon: Gauge },
+      { to: "/relatorios", label: "Relatórios", icon: Receipt },
     ],
   },
 ];

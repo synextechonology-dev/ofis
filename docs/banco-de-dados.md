@@ -34,6 +34,9 @@ Use `mensagemDeErro()` de `src/lib/supabase.ts` para mostrar esses erros em port
 - `mei_faturamento_mensal` (`cliente_id`, `ano`, `mes` 1–12, `faturamento`, `observacao`; único por cliente/ano/mês):
   faturamento mês a mês lançado pela equipe, **sem ligação com o valor das notas**. Lançar um mês cria o cabeçalho do ano
   se faltar. Migração `20261111170000_mei_faturamento_mensal.sql`.
+- `configuracoes_escritorio`: **uma linha só** com `nome`, `contato` e `cor_marca` do escritório, usados no relatório
+  mensal. A equipe edita pela tela `/relatorios` (só essas 3 colunas); ninguém insere nem apaga.
+  Migração `20261111200000_configuracoes_escritorio.sql`.
 - `obrigacoes_acessorias`, `recorrencias`,
   `eventos_calendario`, `tarefas`, `comunicacoes`, `rentabilidade_clientes`.
 

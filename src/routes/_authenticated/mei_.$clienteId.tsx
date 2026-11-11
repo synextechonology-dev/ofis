@@ -10,6 +10,7 @@ import {
   FileText,
   Loader2,
   Pencil,
+  Receipt,
   Trash2,
 } from "lucide-react";
 
@@ -196,7 +197,15 @@ function MeiClientePage() {
             </span>
           </p>
         </div>
-        <Button onClick={() => setEdicao({ tipo: "lancar" })}>Registrar faturamento</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/relatorios" search={{ cliente: clienteId }}>
+              <Receipt />
+              Relatório mensal
+            </Link>
+          </Button>
+          <Button onClick={() => setEdicao({ tipo: "lancar" })}>Registrar faturamento</Button>
+        </div>
       </header>
 
       {/* Limite */}

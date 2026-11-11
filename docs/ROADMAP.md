@@ -41,7 +41,8 @@ na versão atual e resolva os conflitos.
 2. **Telas da prévia ainda não portadas** — comparar cada uma com `docs/previa/ofis-previa.html`:
    - ~~Página do cliente MEI~~ ✅ feita em 11/11/2026 (`/mei/$clienteId`, faturamento mês a mês). Pendente: CNPJ e
      atividade no cabeçalho (depende do item 4) e os botões de PDF/relatório (dependem do relatório mensal).
-   - Relatório mensal do cliente (seções, marca do escritório, cor, PDF e mensagem para o cliente).
+   - ~~Relatório mensal do cliente~~ ✅ feito em 11/11/2026 (`/relatorios`). Clientes que não são MEI aparecem em
+     quantidade de notas (valor de nota não é guardado). Obrigações e pendências por cliente ainda vazias no banco.
    - Busca global / paleta de comandos (Ctrl+K) e atalhos de teclado.
    - Lançar Nota "em sequência" (Enter lança e continua com o mesmo cliente; lista "Lançadas agora").
    - Restyle das demais páginas com os componentes do design system (`docs/design-system/`).
@@ -60,5 +61,6 @@ na versão atual e resolva os conflitos.
 - Sistema é **interno**: cadastro aberto desligado, acesso só por convite.
 - MEI: faixas **80/100%** (abaixo de 80% regular, 80–100% atenção, acima de 100% excedido). (11/11/2026)
 - MEI: faturamento lançado **mês a mês** pela equipe (`mei_faturamento_mensal`), sem guardar valor de nota. (11/11/2026)
+- Nome, contato e cor do escritório nos relatórios: **editáveis na tela**, salvos no banco. (11/11/2026)
 - Mudanças de banco: Claude escreve a migração e o teste; João roda no SQL Editor (o conector não consegue escrever
   a partir do Claude Code); Claude confere com leitura. (11/11/2026)
