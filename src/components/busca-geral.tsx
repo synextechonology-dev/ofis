@@ -321,6 +321,7 @@ export function BuscaGeral() {
       { titulo: "Clientes", itens: clientesAchados },
       { titulo: "Notas", itens: notasAchadas },
     ].filter((g) => g.itens.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busca, clientes, meiCabecalhos, notas, buscaNotas, tema, eu?.papel]);
 
   return (
