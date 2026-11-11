@@ -6,7 +6,13 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { Download, SearchX } from "lucide-react";
 
-import { supabase, type NotaFiscal, type StatusNota, type TipoEmissao } from "@/lib/supabase";
+import {
+  supabase,
+  mensagemDeErro,
+  type NotaFiscal,
+  type StatusNota,
+  type TipoEmissao,
+} from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -142,7 +148,7 @@ function HistoricoPage() {
   async function excluir(nota: NotaFiscal) {
     const { error } = await supabase.from("notas_fiscais").delete().eq("id", nota.id);
     if (error) {
-      toast.error("Erro ao excluir a nota.");
+      toast.error(mensagemDeErro(error, "Erro ao excluir a nota."));
       return;
     }
     toast.success(`Nota ${nota.numero_nf} excluída.`);
@@ -154,8 +160,12 @@ function HistoricoPage() {
       .from("notas_fiscais")
       .select("numero_nf, data_emissao, cliente, status, tipo_emissao")
       .order("data_emissao", { ascending: false });
-    if (dataInicio) query = query.gte("data_emissao", dataInicio);
-    if (dataFim) query = query.lte("data_emissao", dataFim);
+    // Exporta o mesmo que a tela mostra (inclusive o filtro por número vindo da busca geral).
+    if (nf) query = query.eq("numero_nf", nf);
+    else {
+      if (dataInicio) query = query.gte("data_emissao", dataInicio);
+      if (dataFim) query = query.lte("data_emissao", dataFim);
+    }
     if (status !== "todos") query = query.eq("status", status);
     if (tipo !== "todos") query = query.eq("tipo_emissao", tipo);
 
@@ -196,11 +206,17 @@ function HistoricoPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-foreground">Histórico</h1>
-        <p className="text-sm text-muted-foreground">
-          Consulte e exporte as notas fiscais por período e status.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Histórico</h1>
+          <p className="text-sm text-muted-foreground">
+            Consulte e exporte as notas fiscais por período, status e tipo.
+          </p>
+        </div>
+        <Button variant="outline" onClick={exportarCsv}>
+          <Download className="size-4" />
+          Exportar CSV
+        </Button>
       </header>
 
       {nf ? (
@@ -216,7 +232,7 @@ function HistoricoPage() {
       ) : null}
 
       <Card className="rounded-lg border-border shadow-card">
-        <CardContent className="grid gap-4 py-5 md:grid-cols-3 md:items-end lg:grid-cols-5">
+        <CardContent className="grid gap-4 py-5 sm:grid-cols-2 md:items-end lg:grid-cols-4">
           <div className="space-y-2">
             <Label htmlFor="inicio">Data início</Label>
             <Input
@@ -253,7 +269,7 @@ function HistoricoPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="filtro-tipo">Tipo de Emissão</Label>
+            <Label htmlFor="filtro-tipo">Tipo de emissão</Label>
             <Select
               value={tipo}
               onValueChange={(v) => resetPage(setTipo)(v as "todos" | TipoEmissao)}
@@ -269,17 +285,20 @@ function HistoricoPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" onClick={exportarCsv} className="w-full md:w-auto">
-            <Download className="size-4" />
-            Exportar CSV
-          </Button>
         </CardContent>
       </Card>
 
       <Card className="rounded-lg border-border shadow-card">
         <CardHeader>
           <CardTitle className="text-base">
-            {isLoading ? "Carregando..." : `${total} notas encontradas`}
+            {isLoading ? (
+              "Carregando…"
+            ) : (
+              <>
+                <span className="nums">{total}</span>{" "}
+                {total === 1 ? "nota encontrada" : "notas encontradas"}
+              </>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -301,29 +320,31 @@ function HistoricoPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Número NF</TableHead>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Nº NF</TableHead>
+                      <TableHead>Emissão</TableHead>
                       <TableHead>Cliente</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Tipo</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">
+                        <span className="sr-only">Ações</span>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {notas.map((nota) => (
                       <TableRow key={nota.id}>
-                        <TableCell className="font-medium">{nota.numero_nf}</TableCell>
-                        <TableCell>
+                        <TableCell className="font-mono text-sm">{nota.numero_nf}</TableCell>
+                        <TableCell className="nums text-muted-foreground">
                           {format(parseISO(nota.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
-                        <TableCell className="max-w-[18rem] truncate">
+                        <TableCell className="max-w-[18rem] truncate font-medium text-foreground">
                           {nomeCliente(nota)}
                         </TableCell>
                         <TableCell>
-                          <StatusBadge status={nota.status} />
+                          <TipoBadge tipo={nota.tipo_emissao} />
                         </TableCell>
                         <TableCell>
-                          <TipoBadge tipo={nota.tipo_emissao} />
+                          <StatusBadge status={nota.status} />
                         </TableCell>
                         <TableCell className="text-right">
                           <DeleteNotaButton
@@ -338,7 +359,7 @@ function HistoricoPage() {
               </div>
 
               <div className="flex items-center justify-between gap-4">
-                <p className="text-sm text-muted-foreground">
+                <p className="nums text-sm text-muted-foreground">
                   Página {page + 1} de {totalPages}
                 </p>
                 <div className="flex gap-2">
