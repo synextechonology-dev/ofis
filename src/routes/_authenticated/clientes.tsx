@@ -4,10 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO, startOfMonth, subDays, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { History, Plus, Search, UserCheck, UserX, Users, Layers } from "lucide-react";
+import { History, Layers, Pencil, Plus, Search, UserCheck, UserX, Users } from "lucide-react";
 
 import { supabase, mensagemDeErro, type NotaFiscal, type TipoEmissao } from "@/lib/supabase";
-import type { Cliente } from "@/lib/clientes";
+import { tiposDoCliente, type Cliente } from "@/lib/clientes";
+import { SeletorTipos } from "@/components/seletor-tipos";
 import { TIPOS, TIPO_META } from "@/lib/nf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,7 +75,9 @@ function ClientesPage() {
   const queryClient = useQueryClient();
 
   const [nome, setNome] = useState("");
-  const [tipo, setTipo] = useState<TipoEmissao>("comercio");
+  const [tipos, setTipos] = useState<TipoEmissao[]>(["comercio"]);
+  const [editando, setEditando] = useState<Cliente | null>(null);
+  const [tiposEdicao, setTiposEdicao] = useState<TipoEmissao[]>([]);
   const buscaUrl = Route.useSearch().busca;
   const [busca, setBusca] = useState(buscaUrl ?? "");
   useEffect(() => {
@@ -136,6 +139,7 @@ function ClientesPage() {
         const ativo = !!ultima && ultima >= limite30;
         return {
           ...cliente,
+          tipos: tiposDoCliente(cliente),
           notasMes: info?.mes ?? 0,
           ultima,
           ativo,
@@ -150,14 +154,14 @@ function ClientesPage() {
   const tipoMaisComum = useMemo(() => {
     const contagem = TIPOS.map((t) => ({
       tipo: t,
-      qtd: lista.filter((c) => c.tipo_emissao === t).length,
+      qtd: lista.filter((c) => tiposDoCliente(c).includes(t)).length,
     })).sort((a, b) => b.qtd - a.qtd);
     return contagem[0]?.qtd ? TIPO_META[contagem[0].tipo].label : "—";
   }, [lista]);
 
   const filtrados = enriquecidos.filter((c) => {
     const okBusca = normalizar(c.nome).includes(normalizar(busca.trim()));
-    const okTipo = filtroTipo === "todos" || c.tipo_emissao === filtroTipo;
+    const okTipo = filtroTipo === "todos" || c.tipos.includes(filtroTipo);
     return okBusca && okTipo;
   });
 
@@ -165,18 +169,40 @@ function ClientesPage() {
     mutationFn: async () => {
       const { error } = await supabase
         .from("clientes")
-        .insert({ nome: nome.trim(), tipo_emissao: tipo });
+        .insert({ nome: nome.trim(), tipo_emissao: tipos[0], tipos_emissao: tipos });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Cliente cadastrado com sucesso!");
+      toast.success("Cliente cadastrado.");
       setNome("");
-      setTipo("comercio");
+      setTipos(["comercio"]);
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
     },
     onError: (error: Error & { code?: string }) =>
       toast.error(mensagemDeErro(error, "Não foi possível cadastrar o cliente.")),
   });
+
+  const salvarTipos = useMutation({
+    mutationFn: async ({ id, novos }: { id: string; novos: TipoEmissao[] }) => {
+      const { error } = await supabase
+        .from("clientes")
+        .update({ tipo_emissao: novos[0], tipos_emissao: novos })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Tipos de emissão atualizados.");
+      setEditando(null);
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+    },
+    onError: (error: Error & { code?: string }) =>
+      toast.error(mensagemDeErro(error, "Não foi possível salvar os tipos.")),
+  });
+
+  const abrirEdicao = (c: Cliente) => {
+    setEditando(c);
+    setTiposEdicao(tiposDoCliente(c));
+  };
 
   const excluir = useMutation({
     mutationFn: async (id: string) => {
@@ -252,7 +278,7 @@ function ClientesPage() {
         </CardHeader>
         <CardContent>
           <form
-            className="flex flex-col gap-3 sm:flex-row sm:items-end"
+            className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-start"
             onSubmit={(e) => {
               e.preventDefault();
               if (!nome.trim()) {
@@ -262,7 +288,7 @@ function ClientesPage() {
               adicionar.mutate();
             }}
           >
-            <div className="flex-1 space-y-1.5">
+            <div className="space-y-1.5">
               <Label htmlFor="nome-cliente">Nome / razão social</Label>
               <Input
                 id="nome-cliente"
@@ -271,23 +297,12 @@ function ClientesPage() {
                 placeholder="Nome do cliente..."
               />
             </div>
-            <div className="space-y-1.5 sm:w-52">
-              <Label>Tipo de emissão</Label>
-              <Select value={tipo} onValueChange={(v) => setTipo(v as TipoEmissao)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIPOS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {TIPO_META[t].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-1.5">
+              <Label htmlFor="tipos-cliente">Tipos de emissão</Label>
+              <SeletorTipos id="tipos-cliente" value={tipos} onChange={setTipos} />
             </div>
-            <Button type="submit" disabled={adicionar.isPending}>
-              <Plus className="size-4" /> Adicionar
+            <Button type="submit" disabled={adicionar.isPending} className="lg:mt-6">
+              <Plus className="size-4" /> Adicionar cliente
             </Button>
           </form>
         </CardContent>
@@ -344,29 +359,33 @@ function ClientesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="text-right">Notas no mês</TableHead>
-                    <TableHead>Última emissão</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Tipos</TableHead>
+                    <TableHead className="hidden text-right sm:table-cell">Notas no mês</TableHead>
+                    <TableHead className="hidden md:table-cell">Última emissão</TableHead>
+                    <TableHead className="hidden sm:table-cell">Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtrados.map((cliente, index) => (
-                    <TableRow key={cliente.id} className="">
+                  {filtrados.map((cliente) => (
+                    <TableRow key={cliente.id}>
                       <TableCell className="font-medium text-foreground">{cliente.nome}</TableCell>
                       <TableCell>
-                        <TipoBadge tipo={cliente.tipo_emissao} />
+                        <div className="flex flex-wrap gap-1">
+                          {cliente.tipos.map((t) => (
+                            <TipoBadge key={t} tipo={t} />
+                          ))}
+                        </div>
                       </TableCell>
-                      <TableCell className="nums text-right font-semibold text-foreground">
+                      <TableCell className="nums hidden text-right font-semibold text-foreground sm:table-cell">
                         {cliente.notasMes}
                       </TableCell>
-                      <TableCell className="nums text-muted-foreground">
+                      <TableCell className="nums hidden text-muted-foreground md:table-cell">
                         {cliente.ultima
                           ? `${format(parseISO(cliente.ultima), "dd/MM/yyyy", { locale: ptBR })} · ${differenceInCalendarDays(hoje, parseISO(cliente.ultima))}d`
                           : "—"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {cliente.ativo ? (
                           <StatusPill tom="success">Ativo</StatusPill>
                         ) : (
@@ -378,9 +397,20 @@ function ClientesPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setHistoricoCliente(cliente.nome)}
+                            onClick={() => abrirEdicao(cliente)}
+                            aria-label={`Editar tipos de ${cliente.nome}`}
                           >
-                            <History className="size-4" /> Ver histórico
+                            <Pencil className="size-4" />
+                            <span className="hidden lg:inline">Editar tipos</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setHistoricoCliente(cliente.nome)}
+                            aria-label={`Ver histórico de ${cliente.nome}`}
+                          >
+                            <History className="size-4" />
+                            <span className="hidden lg:inline">Ver histórico</span>
                           </Button>
                           <ConfirmDeleteButton
                             title={`Excluir cliente ${cliente.nome}?`}
@@ -399,6 +429,32 @@ function ClientesPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={editando !== null} onOpenChange={(aberto) => !aberto && setEditando(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tipos de emissão</DialogTitle>
+            <DialogDescription>
+              {editando?.nome}. O tipo principal é o sugerido ao lançar uma nota; as notas já
+              lançadas não mudam.
+            </DialogDescription>
+          </DialogHeader>
+          <SeletorTipos value={tiposEdicao} onChange={setTiposEdicao} />
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => setEditando(null)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={salvarTipos.isPending || tiposEdicao.length === 0}
+              onClick={() =>
+                editando && salvarTipos.mutate({ id: editando.id, novos: tiposEdicao })
+              }
+            >
+              Salvar tipos
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={historicoCliente !== null}

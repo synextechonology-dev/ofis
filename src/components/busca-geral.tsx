@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { supabase, type NotaFiscal } from "@/lib/supabase";
-import type { Cliente } from "@/lib/clientes";
+import { tiposDoCliente, type Cliente } from "@/lib/clientes";
 import { useMeuPapel } from "@/lib/equipe";
 import { useTema } from "@/lib/tema";
 import { TIPO_META, STATUS_LABEL } from "@/lib/nf";
@@ -301,7 +301,9 @@ export function BuscaGeral() {
                     id: `c-${c.id}`,
                     icone: Users,
                     titulo: c.nome,
-                    sub: TIPO_META[c.tipo_emissao]?.label ?? "Cliente",
+                    sub: tiposDoCliente(c)
+                      .map((t) => TIPO_META[t]?.label ?? t)
+                      .join(" · "),
                     executar: fechar(() => ir("/clientes", { busca: c.nome })),
                   };
             })

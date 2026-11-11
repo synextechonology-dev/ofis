@@ -30,7 +30,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { EmptyState } from "@/components/empty-state";
 import { ClienteCombobox, type ClienteOption } from "@/components/cliente-combobox";
-import type { Cliente } from "@/lib/clientes";
+import { tiposDoCliente, type Cliente } from "@/lib/clientes";
+import { TIPO_META } from "@/lib/nf";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -165,6 +166,12 @@ function LancarNotaPage() {
       })),
     [clientesCadastrados],
   );
+
+  // Cliente com mais de um tipo: o principal vem selecionado e a ajuda lista os demais.
+  const tiposDoSelecionado = useMemo(() => {
+    const c = (clientesCadastrados ?? []).find((x) => x.id === clienteId);
+    return c ? tiposDoCliente(c) : [];
+  }, [clientesCadastrados, clienteId]);
 
   // Esporádico já cadastrado com o mesmo documento: a nota vai para esse cadastro.
   const espExistente = useMemo(() => {
@@ -738,7 +745,11 @@ function LancarNotaPage() {
                     </SelectContent>
                   </Select>
                   <p className="min-h-4 text-xs text-muted-foreground">
-                    {tipoDoCadastro && modo === "base" ? "Do cadastro do cliente" : null}
+                    {modo === "base" && tiposDoSelecionado.length > 1
+                      ? `Este cliente emite ${tiposDoSelecionado.map((t) => TIPO_META[t].label).join(" e ")}`
+                      : tipoDoCadastro && modo === "base"
+                        ? "Do cadastro do cliente"
+                        : null}
                   </p>
                 </div>
 
