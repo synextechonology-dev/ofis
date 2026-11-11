@@ -1,55 +1,20 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  format,
-  parseISO,
-  subDays,
-  startOfMonth,
-  startOfWeek,
-  endOfWeek,
-  subMonths,
-  eachDayOfInterval,
-  isWithinInterval,
-} from "date-fns";
+import { format, startOfMonth, subDays, subMonths, getDaysInMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  FileText,
-  CalendarRange,
-  CalendarDays,
-  CheckCircle2,
-  ArrowDown,
-  ArrowUp,
-  Trophy,
-  TrendingUp,
-  TrendingDown,
-  PieChart as PieIcon,
-} from "lucide-react";
+import { BarChart3, FilePlus2, FileText, PieChart, Trophy } from "lucide-react";
 
 import { supabase, type NotaFiscal, type StatusNota } from "@/lib/supabase";
+import { MESES_CURTOS, formatarPct } from "@/lib/mei";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/status-badge";
 import { TipoBadge } from "@/components/tipo-badge";
 import { KpiCard, type KpiTrend } from "@/components/kpi-card";
 import { EmptyState } from "@/components/empty-state";
-import { DashboardAlertas } from "@/components/dashboard-alertas";
-import { STATUS_COLOR, TIPOS, TIPO_META, percentual, rankingClientes } from "@/lib/nf";
+import { FilaDoDia } from "@/components/fila-do-dia";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -66,12 +31,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { title: "Dashboard — Ofis" },
       {
         name: "description",
-        content: "Visão geral do volume e status das notas fiscais emitidas no dia, semana e mês.",
-      },
-      { property: "og:title", content: "Dashboard — Ofis" },
-      {
-        property: "og:description",
-        content: "Volume e status das notas fiscais emitidas pelo setor fiscal.",
+        content: "O que precisa de você hoje e o volume de notas do dia, da semana e do mês.",
       },
     ],
   }),
@@ -79,32 +39,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 const iso = (d: Date) => format(d, "yyyy-MM-dd");
+const DIAS_CURTOS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-function tendencia(atual: number, anterior: number, sufixo: string): KpiTrend {
-  if (anterior === 0) {
-    return atual === 0
-      ? { direction: "flat", label: `sem histórico ${sufixo}` }
-      : { direction: "up", label: `novas notas ${sufixo}` };
-  }
-  const variacao = Math.round(((atual - anterior) / anterior) * 100);
+/** Variação em % entre dois totais, no formato da pílula ("+12%", "−4%"). */
+function variacao(atual: number, anterior: number): KpiTrend {
+  if (anterior === 0)
+    return { direction: atual > 0 ? "up" : "flat", label: atual > 0 ? "novo" : "0%" };
+  const v = Math.round(((atual - anterior) / anterior) * 100);
   return {
-    direction: variacao > 0 ? "up" : variacao < 0 ? "down" : "flat",
-    label: `${variacao > 0 ? "+" : ""}${variacao}% ${sufixo}`,
+    direction: v > 0 ? "up" : v < 0 ? "down" : "flat",
+    label: `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}%`,
   };
 }
 
 function DashboardPage() {
   const hoje = useMemo(() => new Date(), []);
-  const [ordemData, setOrdemData] = useState<"asc" | "desc">("desc");
-  const inicioMes = iso(startOfMonth(hoje));
-  const desde = iso(startOfMonth(subMonths(hoje, 1)));
+  const [periodo, setPeriodo] = useState<"7" | "12">("7");
+  const desde = iso(startOfMonth(subMonths(hoje, 11)));
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-notas", desde],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notas_fiscais")
-        .select("*")
+        .select("id, numero_nf, data_emissao, cliente, cliente_id, status, tipo_emissao, criado_em")
         .gte("data_emissao", desde)
         .order("data_emissao", { ascending: false });
       if (error) throw error;
@@ -112,463 +70,439 @@ function DashboardPage() {
     },
   });
 
-  const { data: ultimas, isLoading: loadingUltimas } = useQuery({
+  const { data: ultimas, isLoading: carregandoUltimas } = useQuery({
     queryKey: ["ultimas-notas"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notas_fiscais")
         .select("*")
         .order("criado_em", { ascending: false })
-        .limit(10);
+        .limit(5);
       if (error) throw error;
       return (data ?? []) as NotaFiscal[];
     },
   });
 
-  const notas = data ?? [];
+  const notas = useMemo(() => data ?? [], [data]);
   const hojeIso = iso(hoje);
   const ontemIso = iso(subDays(hoje, 1));
-  const semanaAtual = {
-    start: startOfWeek(hoje, { weekStartsOn: 1 }),
-    end: endOfWeek(hoje, { weekStartsOn: 1 }),
-  };
-  const semanaAnterior = {
-    start: startOfWeek(subDays(hoje, 7), { weekStartsOn: 1 }),
-    end: endOfWeek(subDays(hoje, 7), { weekStartsOn: 1 }),
-  };
-  const inicioMesAnterior = iso(startOfMonth(subMonths(hoje, 1)));
-
-  const noIntervalo = (nota: NotaFiscal, intervalo: { start: Date; end: Date }) =>
-    isWithinInterval(parseISO(nota.data_emissao), intervalo);
-
-  const totalHoje = notas.filter((n) => n.data_emissao === hojeIso).length;
-  const totalOntem = notas.filter((n) => n.data_emissao === ontemIso).length;
-  const notasSemana = notas.filter((n) => noIntervalo(n, semanaAtual));
-  const notasSemanaAnterior = notas.filter((n) => noIntervalo(n, semanaAnterior));
-  const doMes = notas.filter((n) => n.data_emissao >= inicioMes);
-  const doMesAnterior = notas.filter(
-    (n) => n.data_emissao >= inicioMesAnterior && n.data_emissao < inicioMes,
+  const inicioMes = iso(startOfMonth(hoje));
+  const mesAnterior = startOfMonth(subMonths(hoje, 1));
+  const inicioMesAnterior = iso(mesAnterior);
+  // Mesmo pedaço do mês anterior (dia 1 até o dia de hoje), para comparar de forma justa.
+  const fimComparavel = iso(
+    new Date(
+      mesAnterior.getFullYear(),
+      mesAnterior.getMonth(),
+      Math.min(hoje.getDate(), getDaysInMonth(mesAnterior)),
+    ),
   );
-  const totalMes = doMes.length;
-  const autorizadasMes = doMes.filter((n) => n.status === "autorizada").length;
-  const pctAutorizadas = totalMes > 0 ? Math.round((autorizadasMes / totalMes) * 100) : 0;
-  const pctAutorizadasAnterior =
-    doMesAnterior.length > 0
-      ? Math.round(
-          (doMesAnterior.filter((n) => n.status === "autorizada").length / doMesAnterior.length) *
-            100,
-        )
-      : 0;
+  const sete = iso(subDays(hoje, 6));
+  const quatorze = iso(subDays(hoje, 13));
 
-  const barData = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      const dia = subDays(hoje, 6 - i);
-      const key = iso(dia);
-      const doDia = notas.filter((n) => n.data_emissao === key);
+  const k = useMemo(() => {
+    const doDia = (d: string) => notas.filter((n) => n.data_emissao === d);
+    const entre = (a: string, b: string) =>
+      notas.filter((n) => n.data_emissao >= a && n.data_emissao <= b);
+    const mes = notas.filter((n) => n.data_emissao >= inicioMes);
+    const mesAnt = notas.filter(
+      (n) => n.data_emissao >= inicioMesAnterior && n.data_emissao < inicioMes,
+    );
+    const pct = (l: NotaFiscal[]) =>
+      l.length ? (l.filter((n) => n.status === "autorizada").length / l.length) * 100 : 0;
+    return {
+      hoje: doDia(hojeIso),
+      ontem: doDia(ontemIso).length,
+      semana: entre(sete, hojeIso).length,
+      semanaAnt: entre(quatorze, iso(subDays(hoje, 7))).length,
+      mes,
+      mesComparavel: entre(inicioMesAnterior, fimComparavel).length,
+      pctMes: pct(mes),
+      pctMesAnt: pct(mesAnt),
+      temMesAnt: mesAnt.length > 0,
+    };
+  }, [notas, hoje, hojeIso, ontemIso, inicioMes, inicioMesAnterior, fimComparavel, sete, quatorze]);
+
+  const difPp = k.pctMes - k.pctMesAnt;
+  const nomeMesAnt = format(mesAnterior, "MMMM", { locale: ptBR });
+
+  const serie = useMemo(() => {
+    if (periodo === "7")
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = subDays(hoje, 6 - i);
+        return {
+          rotulo: i === 6 ? "Hoje" : DIAS_CURTOS[d.getDay()]!,
+          valor: notas.filter((n) => n.data_emissao === iso(d)).length,
+        };
+      });
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = subMonths(hoje, 11 - i);
+      const chave = format(d, "yyyy-MM");
       return {
-        dia: format(dia, "dd/MM", { locale: ptBR }),
-        autorizada: doDia.filter((n) => n.status === "autorizada").length,
-        cancelada: doDia.filter((n) => n.status === "cancelada").length,
-        denegada: doDia.filter((n) => n.status === "denegada").length,
+        rotulo: `${MESES_CURTOS[d.getMonth()]}${i === 11 ? "*" : ""}`,
+        valor: notas.filter((n) => n.data_emissao.startsWith(chave)).length,
       };
     });
-  }, [notas, hoje]);
+  }, [periodo, notas, hoje]);
 
-  const pieData = (["autorizada", "cancelada", "denegada"] as StatusNota[])
-    .map((status) => ({
-      name: status.charAt(0).toUpperCase() + status.slice(1),
-      status,
-      value: doMes.filter((n) => n.status === status).length,
-    }))
-    .filter((d) => d.value > 0);
-
-  const ranking = useMemo(() => rankingClientes(doMes).slice(0, 5), [doMes]);
-  const maiorRanking = ranking[0]?.quantidade ?? 0;
-
-  const distribuicaoTipo = TIPOS.map((tipo) => ({
-    tipo,
-    quantidade: doMes.filter((n) => n.tipo_emissao === tipo).length,
+  const statusMes = (["autorizada", "cancelada", "denegada"] as StatusNota[]).map((s) => ({
+    status: s,
+    n: k.mes.filter((x) => x.status === s).length,
   }));
 
-  const comparativoSemanas = useMemo(() => {
-    const dias = eachDayOfInterval({ start: semanaAtual.start, end: semanaAtual.end });
-    return dias.map((dia, index) => ({
-      dia: format(dia, "EEEEEE", { locale: ptBR }),
-      atual: notas.filter((n) => n.data_emissao === iso(dia)).length,
-      anterior: notas.filter(
-        (n) =>
-          n.data_emissao ===
-          iso(eachDayOfInterval({ start: semanaAnterior.start, end: semanaAnterior.end })[index]!),
-      ).length,
-    }));
-  }, [notas, semanaAtual.start, semanaAtual.end, semanaAnterior.start, semanaAnterior.end]);
+  const ranking = useMemo(() => {
+    const limite = iso(subDays(hoje, 29));
+    const mapa = new Map<string, { nome: string; n: number }>();
+    for (const n of notas) {
+      if (n.data_emissao < limite) continue;
+      const chave = n.cliente_id ?? n.cliente;
+      const atual = mapa.get(chave) ?? { nome: n.cliente, n: 0 };
+      atual.n += 1;
+      mapa.set(chave, atual);
+    }
+    return [...mapa.values()].sort((a, b) => b.n - a.n).slice(0, 5);
+  }, [notas, hoje]);
 
-  const diffSemanas = notasSemana.length - notasSemanaAnterior.length;
-
-  const ultimasOrdenadas = useMemo(() => {
-    return [...(ultimas ?? [])].sort((a, b) =>
-      ordemData === "desc"
-        ? b.data_emissao.localeCompare(a.data_emissao)
-        : a.data_emissao.localeCompare(b.data_emissao),
-    );
-  }, [ultimas, ordemData]);
+  const dataExtenso = format(hoje, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Acompanhamento das emissões de notas fiscais.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            {dataExtenso.charAt(0).toUpperCase() + dataExtenso.slice(1)} · Acompanhamento das
+            emissões de notas fiscais
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <Link to="/lancar-nota">
+            <FilePlus2 />
+            Lançar nota
+          </Link>
+        </Button>
       </header>
+
+      <FilaDoDia notasHoje={k.hoje} />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Notas hoje"
-          value={totalHoje}
-          icon={FileText}
+          value={k.hoje.length}
           loading={isLoading}
-          trend={tendencia(totalHoje, totalOntem, "vs ontem")}
+          trend={variacao(k.hoje.length, k.ontem)}
+          referencia={`vs ontem (${k.ontem})`}
         />
         <KpiCard
-          label="Notas na semana"
-          value={notasSemana.length}
-          icon={CalendarRange}
-          accent="warning"
+          label="Notas em 7 dias"
+          value={k.semana}
           loading={isLoading}
-          trend={tendencia(notasSemana.length, notasSemanaAnterior.length, "vs semana anterior")}
+          trend={variacao(k.semana, k.semanaAnt)}
+          referencia={`vs 7 dias anteriores (${k.semanaAnt})`}
         />
         <KpiCard
           label="Notas no mês"
-          value={totalMes}
-          icon={CalendarDays}
+          value={k.mes.length}
           loading={isLoading}
-          trend={tendencia(totalMes, doMesAnterior.length, "vs mês anterior")}
+          trend={variacao(k.mes.length, k.mesComparavel)}
+          referencia={`vs mesmo período de ${nomeMesAnt} (${k.mesComparavel})`}
         />
         <KpiCard
           label="Autorizadas no mês"
-          value={`${pctAutorizadas}%`}
-          icon={CheckCircle2}
-          accent="success"
+          value={k.mes.length ? formatarPct(k.pctMes, 1) : "—"}
           loading={isLoading}
-          trend={{
-            direction:
-              pctAutorizadas > pctAutorizadasAnterior
-                ? "up"
-                : pctAutorizadas < pctAutorizadasAnterior
-                  ? "down"
-                  : "flat",
-            label: `${pctAutorizadasAnterior}% no mês anterior`,
-          }}
+          {...(k.temMesAnt && k.mes.length
+            ? {
+                trend: {
+                  direction: difPp > 0.05 ? "up" : difPp < -0.05 ? "down" : "flat",
+                  label: `${difPp >= 0 ? "+" : "−"}${Math.abs(difPp).toLocaleString("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 1 })} p.p.`,
+                } satisfies KpiTrend,
+                referencia: `${formatarPct(k.pctMesAnt, 1)} em ${nomeMesAnt}`,
+              }
+            : {})}
         />
       </section>
 
-      <DashboardAlertas />
-
-      <section className="grid gap-4 sm:grid-cols-3">
-        {distribuicaoTipo.map(({ tipo, quantidade }) => {
-          const meta = TIPO_META[tipo];
-          return (
-            <Card key={tipo} className="hover-lift rounded-lg border-border shadow-kpi">
-              <CardContent className="flex items-center gap-3 py-4">
-                <div
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-lg",
-                    meta.softClass,
-                  )}
+      <section className="grid gap-4 lg:grid-cols-12">
+        <Card className="rounded-lg border-border shadow-card lg:col-span-8">
+          <CardHeader className="flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="size-[18px] text-muted-foreground" aria-hidden />
+              Notas por dia
+            </CardTitle>
+            <div
+              className="inline-flex rounded-md border border-border p-0.5"
+              role="group"
+              aria-label="Período do gráfico"
+            >
+              {(
+                [
+                  ["7", "7 dias"],
+                  ["12", "12 meses"],
+                ] as const
+              ).map(([v, r]) => (
+                <button
+                  key={v}
+                  type="button"
+                  aria-pressed={periodo === v}
+                  onClick={() => setPeriodo(v)}
+                  className="h-7 rounded-[6px] px-3 text-sm text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-secondary aria-pressed:text-foreground"
                 >
-                  <meta.icon className="size-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-muted-foreground">{meta.label}</p>
-                  {isLoading ? (
-                    <Skeleton className="mt-1 h-6 w-20" />
-                  ) : (
-                    <p className="text-lg font-bold text-foreground">
-                      {quantidade}{" "}
-                      <span className="text-xs font-medium text-muted-foreground">
-                        · {percentual(quantidade, totalMes)} do total
-                      </span>
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-5">
-        <Card className="rounded-lg border-border shadow-card lg:col-span-3">
-          <CardHeader>
-            <CardTitle className="text-base">Notas por dia (últimos 7 dias)</CardTitle>
+                  {r}
+                </button>
+              ))}
+            </div>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent>
             {isLoading ? (
-              <Skeleton className="h-full w-full" />
+              <Skeleton className="h-56 w-full" />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barData}>
-                  <CartesianGrid vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="dia" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar
-                    dataKey="autorizada"
-                    name="Autorizada"
-                    stackId="s"
-                    fill={STATUS_COLOR.autorizada}
-                  />
-                  <Bar
-                    dataKey="cancelada"
-                    name="Cancelada"
-                    stackId="s"
-                    fill={STATUS_COLOR.cancelada}
-                  />
-                  <Bar
-                    dataKey="denegada"
-                    name="Denegada"
-                    stackId="s"
-                    fill={STATUS_COLOR.denegada}
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <>
+                <GraficoBarras serie={serie} />
+                {periodo === "12" ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    * {format(hoje, "MMMM", { locale: ptBR })} até hoje.
+                  </p>
+                ) : null}
+              </>
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-lg border-border shadow-card lg:col-span-2">
+        <Card className="rounded-lg border-border shadow-card lg:col-span-4">
           <CardHeader>
-            <CardTitle className="text-base">Status do mês</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <PieChart className="size-[18px] text-muted-foreground" aria-hidden />
+              Status do mês
+            </CardTitle>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent>
             {isLoading ? (
-              <Skeleton className="h-full w-full" />
-            ) : pieData.length === 0 ? (
-              <EmptyState
-                icon={PieIcon}
-                title="Nenhuma nota registrada neste mês"
-                description="Assim que as primeiras notas forem lançadas, a distribuição aparece aqui."
-                className="h-full"
-              />
+              <Skeleton className="h-40 w-full" />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={55}
-                    outerRadius={90}
-                  >
-                    {pieData.map((entry) => (
-                      <Cell key={entry.status} fill={STATUS_COLOR[entry.status]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
+              <>
+                <div className="flex flex-col gap-5">
+                  {statusMes.map(({ status, n }) => (
+                    <div key={status} className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <StatusBadge status={status} />
+                        <span className="nums font-semibold text-foreground">{n}</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+                        <span
+                          className={cn(
+                            "block h-full rounded-full",
+                            status === "autorizada" && "bg-success",
+                            status === "cancelada" && "bg-destructive",
+                            status === "denegada" && "bg-warning",
+                          )}
+                          style={{
+                            width: `${n ? Math.max((n / Math.max(1, k.mes.length)) * 100, 1.5) : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-5 text-[13px] leading-[18px] text-muted-foreground">
+                  <span className="nums">{k.mes.length}</span>{" "}
+                  {k.mes.length === 1 ? "nota emitida" : "notas emitidas"} em{" "}
+                  {format(hoje, "MMMM", { locale: ptBR })}, até hoje
+                </p>
+              </>
             )}
           </CardContent>
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <Card className="rounded-lg border-border shadow-card">
-          <CardHeader className="flex-row items-center gap-2 space-y-0">
-            <Trophy className="size-4 text-warning" />
-            <CardTitle className="text-base">Clientes que mais emitiram (mês)</CardTitle>
+      <section className="grid gap-4 lg:grid-cols-12">
+        <Card className="rounded-lg border-border shadow-card lg:col-span-8">
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileText className="size-[18px] text-muted-foreground" aria-hidden />
+              Últimas notas lançadas
+            </CardTitle>
+            <Link
+              to="/historico"
+              className="text-sm font-medium text-accent-foreground underline-offset-4 hover:underline"
+            >
+              Ver todas
+            </Link>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {isLoading ? (
-              <div className="space-y-3">
+          <CardContent>
+            {carregandoUltimas ? (
+              <div className="space-y-2">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Skeleton key={i} className="h-10 w-full" />
                 ))}
               </div>
-            ) : ranking.length === 0 ? (
+            ) : (ultimas ?? []).length === 0 ? (
               <EmptyState
-                icon={Trophy}
-                title="Sem ranking por enquanto"
-                description="Lance notas neste mês para descobrir os clientes mais ativos."
+                icon={FileText}
+                title="Nenhuma nota lançada ainda"
+                description="Use “Lançar nota” para registrar a primeira emissão."
               />
             ) : (
-              ranking.map((item, index) => (
-                <div key={item.cliente} className="block-in space-y-1.5">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-secondary text-xs font-bold text-primary">
-                        {index + 1}
-                      </span>
-                      <span className="truncate font-medium text-foreground">{item.cliente}</span>
-                    </span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      <TipoBadge tipo={item.tipoPrincipal} />
-                      <span className="text-sm font-semibold text-foreground">
-                        {item.quantidade}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{
-                        width: `${maiorRanking ? (item.quantidade / maiorRanking) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nº</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Emissão</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(ultimas ?? []).map((n) => (
+                      <TableRow key={n.id}>
+                        <TableCell className="font-mono text-sm">{n.numero_nf}</TableCell>
+                        <TableCell className="max-w-[16rem] truncate font-medium text-foreground">
+                          {n.cliente}
+                        </TableCell>
+                        <TableCell className="nums text-muted-foreground">
+                          {format(new Date(`${n.data_emissao}T12:00:00`), "dd/MM/yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <TipoBadge tipo={n.tipo_emissao} />
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={n.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-lg border-border shadow-card">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-base">Semana atual vs semana anterior</CardTitle>
-            {isLoading ? (
-              <Skeleton className="h-4 w-40" />
-            ) : (
-              <p
-                className={cn(
-                  "inline-flex items-center gap-1 text-sm font-medium",
-                  diffSemanas > 0 && "text-success",
-                  diffSemanas < 0 && "text-destructive",
-                  diffSemanas === 0 && "text-muted-foreground",
-                )}
-              >
-                {diffSemanas >= 0 ? (
-                  <TrendingUp className="size-4" />
-                ) : (
-                  <TrendingDown className="size-4" />
-                )}
-                {notasSemana.length} nesta semana · {notasSemanaAnterior.length} na anterior
-              </p>
-            )}
+        <Card className="rounded-lg border-border shadow-card lg:col-span-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Trophy className="size-[18px] text-muted-foreground" aria-hidden />
+              Clientes que mais emitiram
+            </CardTitle>
           </CardHeader>
-          <CardContent className="h-56">
+          <CardContent>
             {isLoading ? (
-              <Skeleton className="h-full w-full" />
+              <Skeleton className="h-48 w-full" />
+            ) : ranking.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma nota nos últimos 30 dias.</p>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={comparativoSemanas}>
-                  <CartesianGrid vertical={false} stroke="var(--border)" />
-                  <XAxis dataKey="dia" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line
-                    type="monotone"
-                    dataKey="anterior"
-                    name="Semana anterior"
-                    stroke="var(--chart-5)"
-                    strokeDasharray="4 4"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="atual"
-                    name="Semana atual"
-                    stroke={diffSemanas >= 0 ? "var(--success)" : "var(--destructive)"}
-                    strokeWidth={2.5}
-                    dot={{ r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <>
+                <ol className="divide-y divide-border">
+                  {ranking.map((r, i) => (
+                    <li key={r.nome} className="flex items-center gap-3 py-2.5">
+                      <span className="nums w-5 text-[13px] text-muted-foreground">{i + 1}</span>
+                      <span className="min-w-0 flex-1 truncate text-foreground">{r.nome}</span>
+                      <span className="nums text-muted-foreground">
+                        {r.n} {r.n === 1 ? "nota" : "notas"}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-2 text-xs text-muted-foreground">Últimos 30 dias.</p>
+              </>
             )}
           </CardContent>
         </Card>
       </section>
-
-      <Card className="rounded-lg border-border shadow-card">
-        <CardHeader>
-          <CardTitle className="text-base">Últimas 10 notas lançadas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingUltimas ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : (ultimas ?? []).length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title="Nenhuma nota lançada ainda"
-              description="Use a página “Lançar Nota” para registrar a primeira emissão."
-            />
-          ) : (
-            <div className="max-h-[26rem] overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número NF</TableHead>
-                    <TableHead>
-                      <button
-                        type="button"
-                        onClick={() => setOrdemData((o) => (o === "desc" ? "asc" : "desc"))}
-                        className="inline-flex items-center gap-1 font-medium hover:text-foreground"
-                      >
-                        Data
-                        {ordemData === "desc" ? (
-                          <ArrowDown className="size-3.5" />
-                        ) : (
-                          <ArrowUp className="size-3.5" />
-                        )}
-                      </button>
-                    </TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Tipo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ultimasOrdenadas.map((nota) => (
-                    <TableRow key={nota.id}>
-                      <TableCell className="font-medium">{nota.numero_nf}</TableCell>
-                      <TableCell>
-                        {format(parseISO(nota.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell className="max-w-[16rem] truncate">{nota.cliente}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={nota.status} />
-                      </TableCell>
-                      <TableCell>
-                        <TipoBadge tipo={nota.tipo_emissao} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
+  );
+}
+
+/** Barras neutras; a última (hoje / mês atual) em destaque com a cor de marca. */
+function GraficoBarras({ serie }: { serie: { rotulo: string; valor: number }[] }) {
+  const W = 700;
+  const H = 170;
+  const x0 = 44;
+  const n = serie.length;
+  const passo = (W - x0 - 8) / n;
+  const larg = Math.min(56, passo * 0.62);
+  const max = Math.max(4, ...serie.map((s) => s.valor)) * 1.18;
+  const y = (v: number) => 16 + H - (v / max) * H;
+  const bruto = max / 4;
+  const ordem = 10 ** Math.floor(Math.log10(bruto));
+  const degrau = Math.max(1, Math.ceil(bruto / ordem) * ordem);
+  const linhas: number[] = [];
+  for (let v = 0; v <= max; v += degrau) linhas.push(v);
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} 220`}
+      className="h-auto w-full"
+      role="img"
+      aria-label="Notas por período"
+    >
+      {linhas.map((v) => (
+        <g key={v}>
+          <line
+            x1={x0 - 6}
+            x2={W - 8}
+            y1={y(v)}
+            y2={y(v)}
+            className="stroke-border"
+            strokeWidth={1}
+          />
+          <text
+            x={x0 - 14}
+            y={y(v) + 4}
+            textAnchor="end"
+            className="nums fill-muted-foreground text-[12px]"
+          >
+            {v}
+          </text>
+        </g>
+      ))}
+      {serie.map((s, i) => {
+        const x = x0 + i * passo + (passo - larg) / 2;
+        const atual = i === n - 1;
+        return (
+          <g key={s.rotulo + i}>
+            {s.valor > 0 ? (
+              <rect
+                x={x}
+                y={y(s.valor)}
+                width={larg}
+                height={16 + H - y(s.valor)}
+                rx={8}
+                className={atual ? "fill-primary" : "fill-chart-5"}
+              >
+                <title>
+                  {s.rotulo}: {s.valor} {s.valor === 1 ? "nota" : "notas"}
+                </title>
+              </rect>
+            ) : null}
+            {s.valor > 0 ? (
+              <text
+                x={x + larg / 2}
+                y={y(s.valor) - 6}
+                textAnchor="middle"
+                className={cn(
+                  "nums text-[12px]",
+                  atual ? "fill-foreground font-semibold" : "fill-muted-foreground",
+                )}
+              >
+                {s.valor}
+              </text>
+            ) : null}
+            <text
+              x={x + larg / 2}
+              y={16 + H + 24}
+              textAnchor="middle"
+              className={cn(
+                "text-[12px]",
+                atual ? "fill-foreground font-medium" : "fill-muted-foreground",
+              )}
+            >
+              {s.rotulo}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
