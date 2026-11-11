@@ -1,4 +1,4 @@
-﻿# Roadmap — o que já está no código e o que falta
+# Roadmap — o que já está no código e o que falta
 
 A referência visual e de comportamento de **todas** as telas é `docs/previa/ofis-previa.html`
 (abra no navegador; é a prévia aprovada pelo João). O código real ainda não tem tudo que a prévia mostra.
