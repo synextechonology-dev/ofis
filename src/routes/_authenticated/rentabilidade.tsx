@@ -380,10 +380,7 @@ function RentabilidadePage() {
                     const classe = classePorCliente.get(l.cliente.id);
                     const nivel = nivelDemanda(l.score);
                     return (
-                      <TableRow
-                        key={l.cliente.id}
-                        className=""
-                      >
+                      <TableRow key={l.cliente.id} className="">
                         <TableCell className="font-medium">{l.cliente.nome}</TableCell>
                         <TableCell>
                           <TipoBadge tipo={l.cliente.tipo_emissao} />

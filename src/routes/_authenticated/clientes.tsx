@@ -352,10 +352,7 @@ function ClientesPage() {
                 </TableHeader>
                 <TableBody>
                   {filtrados.map((cliente, index) => (
-                    <TableRow
-                      key={cliente.id}
-                      className=""
-                    >
+                    <TableRow key={cliente.id} className="">
                       <TableCell className="font-medium">{cliente.nome}</TableCell>
                       <TableCell>
                         <TipoBadge tipo={cliente.tipo_emissao} />

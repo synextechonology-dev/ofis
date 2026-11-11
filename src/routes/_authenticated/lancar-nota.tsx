@@ -221,7 +221,6 @@ function LancarNotaPage() {
     const proximo = ultimoNumero ? proximoNumero(ultimoNumero) : null;
     setNumeroNf(proximo ?? "");
     setNumeroSugerido(!!proximo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ultimoNumero, alvo?.id]);
 
   // Mesmo número já lançado para este cliente?
