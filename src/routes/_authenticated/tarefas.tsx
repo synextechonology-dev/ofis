@@ -155,7 +155,10 @@ function TarefasPage() {
   });
 
   const hojeQuery = useQuery(listaQuery("hoje", hoje, hoje));
-  const semanaQuery = useQuery({ ...listaQuery("semana", inicioSemana, hoje), enabled: aba === "semana" });
+  const semanaQuery = useQuery({
+    ...listaQuery("semana", inicioSemana, hoje),
+    enabled: aba === "semana",
+  });
   const mesQuery = useQuery({ ...listaQuery("mes", inicioMes, fimMes), enabled: aba === "mes" });
 
   useEffect(() => {
@@ -219,7 +222,9 @@ function TarefasPage() {
 
   const insights = useMemo(() => {
     const lista: { icon: typeof Lightbulb; texto: string; tone: string }[] = [];
-    const urgentes = tarefasHoje.filter((t) => t.prioridade === "urgente" && t.status !== "concluida");
+    const urgentes = tarefasHoje.filter(
+      (t) => t.prioridade === "urgente" && t.status !== "concluida",
+    );
     if (urgentes.length) {
       lista.push({
         icon: AlertTriangle,
@@ -429,7 +434,10 @@ function TarefasPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Categoria</Label>
-                  <Select value={categoria} onValueChange={(v) => setCategoria(v as CategoriaTarefa)}>
+                  <Select
+                    value={categoria}
+                    onValueChange={(v) => setCategoria(v as CategoriaTarefa)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -472,7 +480,9 @@ function TarefasPage() {
                   <>
                     <Secao
                       titulo="🔴 Urgente/Alta"
-                      contagem={tarefasHoje.filter((t) => t.status !== "concluida" && isAlta(t)).length}
+                      contagem={
+                        tarefasHoje.filter((t) => t.status !== "concluida" && isAlta(t)).length
+                      }
                     >
                       {tarefasHoje
                         .filter((t) => t.status !== "concluida" && isAlta(t))
@@ -481,7 +491,10 @@ function TarefasPage() {
                             key={t.id}
                             tarefa={t}
                             onToggleConcluida={(x) =>
-                              void atualizarStatus(x, x.status === "concluida" ? "pendente" : "concluida")
+                              void atualizarStatus(
+                                x,
+                                x.status === "concluida" ? "pendente" : "concluida",
+                              )
                             }
                             onToggleAndamento={(x) =>
                               void atualizarStatus(
@@ -495,7 +508,9 @@ function TarefasPage() {
                     </Secao>
                     <Secao
                       titulo="🟡 Normal/Baixa"
-                      contagem={tarefasHoje.filter((t) => t.status !== "concluida" && !isAlta(t)).length}
+                      contagem={
+                        tarefasHoje.filter((t) => t.status !== "concluida" && !isAlta(t)).length
+                      }
                     >
                       {tarefasHoje
                         .filter((t) => t.status !== "concluida" && !isAlta(t))
@@ -504,7 +519,10 @@ function TarefasPage() {
                             key={t.id}
                             tarefa={t}
                             onToggleConcluida={(x) =>
-                              void atualizarStatus(x, x.status === "concluida" ? "pendente" : "concluida")
+                              void atualizarStatus(
+                                x,
+                                x.status === "concluida" ? "pendente" : "concluida",
+                              )
                             }
                             onToggleAndamento={(x) =>
                               void atualizarStatus(
@@ -545,11 +563,20 @@ function TarefasPage() {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={graficoSemana}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="var(--border)"
+                        />
                         <XAxis dataKey="dia" tick={{ fontSize: 12 }} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                         <ReTooltip />
-                        <Bar dataKey="concluidas" name="Concluídas" fill="var(--success)" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="concluidas"
+                          name="Concluídas"
+                          fill="var(--success)"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   )}
@@ -597,7 +624,9 @@ function TarefasPage() {
                               <TableBody>
                                 {doDia.map((t) => (
                                   <TableRow key={t.id}>
-                                    <TableCell>{format(parseISO(t.data_tarefa), "dd/MM/yyyy")}</TableCell>
+                                    <TableCell>
+                                      {format(parseISO(t.data_tarefa), "dd/MM/yyyy")}
+                                    </TableCell>
                                     <TableCell className="max-w-[18rem] truncate font-medium">
                                       {t.titulo}
                                     </TableCell>
@@ -611,7 +640,9 @@ function TarefasPage() {
                                       <StatusTarefaBadge status={t.status} />
                                     </TableCell>
                                     <TableCell>
-                                      {t.concluida_em ? format(parseISO(t.concluida_em), "HH:mm") : "—"}
+                                      {t.concluida_em
+                                        ? format(parseISO(t.concluida_em), "HH:mm")
+                                        : "—"}
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -682,13 +713,27 @@ function TarefasPage() {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={semanasMes}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="var(--border)"
+                        />
                         <XAxis dataKey="semana" tick={{ fontSize: 12 }} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                         <ReTooltip />
                         <Legend />
-                        <Bar dataKey="concluidas" name="Concluídas" fill="var(--success)" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="pendentes" name="Pendentes" fill="var(--warning)" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="concluidas"
+                          name="Concluídas"
+                          fill="var(--success)"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="pendentes"
+                          name="Pendentes"
+                          fill="var(--warning)"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   )}
@@ -705,7 +750,11 @@ function TarefasPage() {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={rankingCategorias} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          horizontal={false}
+                          stroke="var(--border)"
+                        />
                         <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
                         <YAxis
                           type="category"

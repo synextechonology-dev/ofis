@@ -1,13 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  differenceInCalendarDays,
-  endOfMonth,
-  format,
-  parseISO,
-  startOfMonth,
-} from "date-fns";
+import { differenceInCalendarDays, endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { AlertTriangle, CalendarClock, Check, CheckCircle2, Clock, FileCheck } from "lucide-react";
@@ -272,7 +266,7 @@ function ObrigacoesPage() {
             {itens.map((o) => (
               <TableRow key={o.id} className="row-in hover:bg-row-hover">
                 <TableCell className="font-medium">
-                  {o.cliente_id ? nomePorId.get(o.cliente_id) ?? "Cliente removido" : "Geral"}
+                  {o.cliente_id ? (nomePorId.get(o.cliente_id) ?? "Cliente removido") : "Geral"}
                 </TableCell>
                 <TableCell>
                   <Badge
@@ -391,8 +385,7 @@ function ObrigacoesPage() {
                     <span className="font-medium">
                       {TIPO_OBRIGACAO_META[o.tipo]?.label ?? o.tipo}
                     </span>{" "}
-                    ·{" "}
-                    {o.cliente_id ? nomePorId.get(o.cliente_id) ?? "Cliente removido" : "Geral"}
+                    · {o.cliente_id ? (nomePorId.get(o.cliente_id) ?? "Cliente removido") : "Geral"}
                   </span>
                   <span className="shrink-0 text-muted-foreground">
                     {format(parseISO(o.vencimento), "dd/MM")}

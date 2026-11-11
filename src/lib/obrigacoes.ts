@@ -34,11 +34,9 @@ export const TIPO_OBRIGACAO_META: Record<TipoObrigacao, { label: string; classNa
   outro: { label: "Outro", className: "bg-muted text-muted-foreground" },
 };
 
-export const STATUS_OBRIGACAO_META: Record<
-  StatusObrigacao,
-  { label: string; className: string }
-> = {
-  pendente: { label: "Pendente", className: "bg-warning text-warning-foreground" },
-  entregue: { label: "Entregue", className: "bg-success text-success-foreground" },
-  atrasada: { label: "Atrasada", className: "bg-destructive text-destructive-foreground" },
-};
+export const STATUS_OBRIGACAO_META: Record<StatusObrigacao, { label: string; className: string }> =
+  {
+    pendente: { label: "Pendente", className: "bg-warning text-warning-foreground" },
+    entregue: { label: "Entregue", className: "bg-success text-success-foreground" },
+    atrasada: { label: "Atrasada", className: "bg-destructive text-destructive-foreground" },
+  };

@@ -14,10 +14,7 @@ import {
   type ClienteEsporadico,
   type LinhaRelatorioEsporadico,
 } from "@/lib/esporadicos";
-import {
-  gerarRelatorioEsporadicosPdf,
-  mensagemFinanceiro,
-} from "@/lib/relatorio-esporadicos-pdf";
+import { gerarRelatorioEsporadicosPdf, mensagemFinanceiro } from "@/lib/relatorio-esporadicos-pdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/esporadicos")({
       { title: "Clientes esporádicos — Ofis" },
       {
         name: "description",
-        content: "Notas emitidas para quem não é cliente do escritório, prontas para o financeiro cobrar.",
+        content:
+          "Notas emitidas para quem não é cliente do escritório, prontas para o financeiro cobrar.",
       },
     ],
   }),
@@ -74,11 +72,7 @@ const rotuloMes = (ym: string) => {
   const s = format(parseISO(`${ym}-01`), "MMMM 'de' yyyy", { locale: ptBR });
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
-const normalizar = (v: string) =>
-  v
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+const normalizar = (v: string) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 function EsporadicosPage() {
   const queryClient = useQueryClient();
@@ -199,7 +193,12 @@ function EsporadicosPage() {
   }
 
   async function copiarMensagem() {
-    const texto = mensagemFinanceiro({ linhas: doRelatorio, periodo: rotuloPeriodo, para, observacao });
+    const texto = mensagemFinanceiro({
+      linhas: doRelatorio,
+      periodo: rotuloPeriodo,
+      para,
+      observacao,
+    });
     try {
       await navigator.clipboard.writeText(texto);
       toast.success("Mensagem copiada. Cole no WhatsApp ou no e-mail.");
@@ -254,7 +253,11 @@ function EsporadicosPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { rotulo: "Esporádicos cadastrados", valor: String(base?.length ?? "—"), rodape: "base separada da carteira" },
+          {
+            rotulo: "Esporádicos cadastrados",
+            valor: String(base?.length ?? "—"),
+            rodape: "base separada da carteira",
+          },
           {
             rotulo: "Notas no período",
             valor: String(doPeriodo.length),
@@ -400,7 +403,10 @@ function EsporadicosPage() {
                   {visiveis.map((l) => {
                     const pode = cobravel(l) && !l.repassado_financeiro_em;
                     return (
-                      <TableRow key={l.nota_id} data-state={selecionadas.has(l.nota_id) ? "selected" : undefined}>
+                      <TableRow
+                        key={l.nota_id}
+                        data-state={selecionadas.has(l.nota_id) ? "selected" : undefined}
+                      >
                         <TableCell>
                           {pode ? (
                             <Checkbox
@@ -497,8 +503,12 @@ function EsporadicosPage() {
                     return (
                       <TableRow key={e.id}>
                         <TableCell className="font-medium">{e.nome}</TableCell>
-                        <TableCell className="font-mono text-sm">{formatarDocumento(e.documento)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{e.contato || "—"}</TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {formatarDocumento(e.documento)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {e.contato || "—"}
+                        </TableCell>
                         <TableCell className="nums text-right">{c?.n ?? 0}</TableCell>
                         <TableCell className="nums">
                           {c ? format(parseISO(c.ultima), "dd/MM/yyyy") : "—"}

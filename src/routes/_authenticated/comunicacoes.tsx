@@ -202,9 +202,7 @@ function ComunicacoesPage() {
                 </Badge>
                 <span className="font-semibold text-foreground">{c.titulo}</span>
               </div>
-              {c.descricao ? (
-                <p className="text-sm text-muted-foreground">{c.descricao}</p>
-              ) : null}
+              {c.descricao ? <p className="text-sm text-muted-foreground">{c.descricao}</p> : null}
               <p className="text-xs text-muted-foreground">
                 {c.cliente_id ? (nomePorId.get(c.cliente_id) ?? "Cliente") : "Geral"} ·{" "}
                 {format(parseISO(c.criado_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}

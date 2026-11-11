@@ -15,7 +15,8 @@ export const Route = createFileRoute("/auth")({
       { title: "Entrar — Ofis" },
       {
         name: "description",
-        content: "Acesso restrito ao setor fiscal. Entre com seu e-mail e senha para gerenciar as notas fiscais.",
+        content:
+          "Acesso restrito ao setor fiscal. Entre com seu e-mail e senha para gerenciar as notas fiscais.",
       },
       { property: "og:title", content: "Entrar — Ofis" },
       {

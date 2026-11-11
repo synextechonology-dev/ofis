@@ -72,7 +72,8 @@ export function documentoValido(valor: string): boolean {
   if (d.length === 14) {
     if (/^(\d)\1+$/.test(d)) return false;
     const calc = (n: number) => {
-      const pesos = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+      const pesos =
+        n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
       let soma = 0;
       for (let i = 0; i < n; i++) soma += Number(d[i]) * pesos[i]!;
       const r = soma % 11;
@@ -88,10 +89,14 @@ export const formatarReais = (v: number) => brl.format(v);
 
 /** Converte "1.234,56" / "50" / "50,00" em número. Retorna NaN se inválido. */
 export function lerReais(valor: string): number {
-  const limpo = valor.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+  const limpo = valor
+    .replace(/[^\d,.-]/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
   if (!limpo.trim()) return Number.NaN;
   return Number(limpo);
 }
 
 /** Valor cobrado de uma nota (notas antigas sem valor contam como o padrão). */
-export const valorDaNota = (v: number | null | undefined) => (v == null ? COBRANCA_PADRAO : Number(v));
+export const valorDaNota = (v: number | null | undefined) =>
+  v == null ? COBRANCA_PADRAO : Number(v);

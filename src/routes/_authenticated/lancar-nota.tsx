@@ -47,7 +47,8 @@ export const Route = createFileRoute("/_authenticated/lancar-nota")({
       { title: "Lançar Nota — Ofis" },
       {
         name: "description",
-        content: "Cadastre uma nova nota fiscal informando número, data de emissão, cliente e status.",
+        content:
+          "Cadastre uma nova nota fiscal informando número, data de emissão, cliente e status.",
       },
       { property: "og:title", content: "Lançar Nota — Ofis" },
       {
@@ -75,12 +76,7 @@ type NotaSalva = z.infer<typeof schemaNota> & {
 };
 
 const hoje = () => format(new Date(), "yyyy-MM-dd");
-const normalizar = (v: string) =>
-  v
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+const normalizar = (v: string) => v.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 
 function LancarNotaPage() {
   const queryClient = useQueryClient();
@@ -275,9 +271,7 @@ function LancarNotaPage() {
   }
 
   function concluir(nota: NotaSalva) {
-    toast.success(
-      `Nota ${nota.numero_nf} salva${nota.esporadico ? " · cliente esporádico" : ""}.`,
-    );
+    toast.success(`Nota ${nota.numero_nf} salva${nota.esporadico ? " · cliente esporádico" : ""}.`);
     setUltimaSalva(nota);
     limparFormulario();
     queryClient.invalidateQueries();
@@ -595,7 +589,8 @@ function LancarNotaPage() {
 
             {modo === "esporadico" && espExistente ? (
               <p className="text-xs text-muted-foreground">
-                Documento {formatarDocumento(espExistente.documento)} já está na base de esporádicos.
+                Documento {formatarDocumento(espExistente.documento)} já está na base de
+                esporádicos.
               </p>
             ) : null}
 

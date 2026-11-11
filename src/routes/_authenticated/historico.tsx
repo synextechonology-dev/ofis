@@ -38,7 +38,8 @@ export const Route = createFileRoute("/_authenticated/historico")({
       { title: "Histórico — Ofis" },
       {
         name: "description",
-        content: "Consulte todas as notas fiscais por período e status, com paginação e exportação em CSV.",
+        content:
+          "Consulte todas as notas fiscais por período e status, com paginação e exportação em CSV.",
       },
       { property: "og:title", content: "Histórico — Ofis" },
       {
@@ -54,7 +55,9 @@ const PAGE_SIZE = 20;
 
 function HistoricoPage() {
   const queryClient = useQueryClient();
-  const [dataInicio, setDataInicio] = useState(() => format(startOfMonth(new Date()), "yyyy-MM-dd"));
+  const [dataInicio, setDataInicio] = useState(() =>
+    format(startOfMonth(new Date()), "yyyy-MM-dd"),
+  );
   const [dataFim, setDataFim] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [status, setStatus] = useState<"todos" | StatusNota>("todos");
   const [tipo, setTipo] = useState<"todos" | TipoEmissao>("todos");
@@ -229,7 +232,6 @@ function HistoricoPage() {
             </Select>
           </div>
           <Button variant="outline" onClick={exportarCsv} className="w-full md:w-auto">
-
             <Download className="size-4" />
             Exportar CSV
           </Button>
@@ -276,7 +278,9 @@ function HistoricoPage() {
                         <TableCell>
                           {format(parseISO(nota.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
-                        <TableCell className="max-w-[18rem] truncate">{nomeCliente(nota)}</TableCell>
+                        <TableCell className="max-w-[18rem] truncate">
+                          {nomeCliente(nota)}
+                        </TableCell>
                         <TableCell>
                           <StatusBadge status={nota.status} />
                         </TableCell>

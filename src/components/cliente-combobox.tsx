@@ -41,9 +41,7 @@ export function ClienteCombobox({
 
   const filtradas = useMemo(() => {
     const termo = value.trim().toLowerCase();
-    const base = termo
-      ? options.filter((o) => o.cliente.toLowerCase().includes(termo))
-      : options;
+    const base = termo ? options.filter((o) => o.cliente.toLowerCase().includes(termo)) : options;
     return base.slice(0, 8);
   }, [options, value]);
 

@@ -130,8 +130,7 @@ export function DashboardAlertas() {
           </>
         ) : alertas.length === 0 ? (
           <div className="row-in flex items-center gap-3 rounded-md bg-success/10 px-3 py-2.5 text-sm font-medium text-success">
-            <CheckCircle2 className="size-4.5 shrink-0" />
-            ✅ Tudo em ordem por hoje!
+            <CheckCircle2 className="size-4.5 shrink-0" />✅ Tudo em ordem por hoje!
           </div>
         ) : (
           alertas.map((alerta, index) => (

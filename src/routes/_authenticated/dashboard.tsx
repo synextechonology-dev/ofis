@@ -128,7 +128,10 @@ function DashboardPage() {
   const notas = data ?? [];
   const hojeIso = iso(hoje);
   const ontemIso = iso(subDays(hoje, 1));
-  const semanaAtual = { start: startOfWeek(hoje, { weekStartsOn: 1 }), end: endOfWeek(hoje, { weekStartsOn: 1 }) };
+  const semanaAtual = {
+    start: startOfWeek(hoje, { weekStartsOn: 1 }),
+    end: endOfWeek(hoje, { weekStartsOn: 1 }),
+  };
   const semanaAnterior = {
     start: startOfWeek(subDays(hoje, 7), { weekStartsOn: 1 }),
     end: endOfWeek(subDays(hoje, 7), { weekStartsOn: 1 }),
@@ -193,7 +196,9 @@ function DashboardPage() {
       dia: format(dia, "EEEEEE", { locale: ptBR }),
       atual: notas.filter((n) => n.data_emissao === iso(dia)).length,
       anterior: notas.filter(
-        (n) => n.data_emissao === iso(eachDayOfInterval({ start: semanaAnterior.start, end: semanaAnterior.end })[index]!),
+        (n) =>
+          n.data_emissao ===
+          iso(eachDayOfInterval({ start: semanaAnterior.start, end: semanaAnterior.end })[index]!),
       ).length,
     }));
   }, [notas, semanaAtual.start, semanaAtual.end, semanaAnterior.start, semanaAnterior.end]);
@@ -267,7 +272,10 @@ function DashboardPage() {
             <Card key={tipo} className="hover-lift rounded-lg border-border shadow-kpi">
               <CardContent className="flex items-center gap-3 py-4">
                 <div
-                  className={cn("flex size-10 items-center justify-center rounded-lg", meta.softClass)}
+                  className={cn(
+                    "flex size-10 items-center justify-center rounded-lg",
+                    meta.softClass,
+                  )}
                 >
                   <meta.icon className="size-5" />
                 </div>
@@ -355,7 +363,13 @@ function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90}>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={55}
+                    outerRadius={90}
+                  >
                     {pieData.map((entry) => (
                       <Cell key={entry.status} fill={STATUS_COLOR[entry.status]} />
                     ))}

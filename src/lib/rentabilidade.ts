@@ -35,8 +35,7 @@ export const COMPLEXIDADE_META: Record<
 export type NivelDemanda = { label: string; className: string };
 
 export function nivelDemanda(score: number): NivelDemanda {
-  if (score > 20)
-    return { label: "Alta", className: "bg-destructive text-destructive-foreground" };
+  if (score > 20) return { label: "Alta", className: "bg-destructive text-destructive-foreground" };
   if (score >= 10) return { label: "Média", className: "bg-warning text-warning-foreground" };
   return { label: "Baixa", className: "bg-success text-success-foreground" };
 }

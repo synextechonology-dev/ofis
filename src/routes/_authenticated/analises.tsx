@@ -156,10 +156,7 @@ function AnalisesPage() {
   const heatmap = useMemo(() => {
     const inicioMes = startOfMonth(hoje);
     const fimMes = endOfMonth(hoje);
-    const semanas = eachWeekOfInterval(
-      { start: inicioMes, end: fimMes },
-      { weekStartsOn: 1 },
-    );
+    const semanas = eachWeekOfInterval({ start: inicioMes, end: fimMes }, { weekStartsOn: 1 });
     const grade = semanas.map((inicioSemana, index) => ({
       semana: `S${index + 1}`,
       dias: eachDayOfInterval({

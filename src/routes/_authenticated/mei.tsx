@@ -97,10 +97,7 @@ function MeiPage() {
 
   const isLoading = loadingClientes || loadingMei;
   const lista = clientes ?? [];
-  const nomePorId = useMemo(
-    () => new Map(lista.map((c) => [c.id, c.nome] as const)),
-    [lista],
-  );
+  const nomePorId = useMemo(() => new Map(lista.map((c) => [c.id, c.nome] as const)), [lista]);
 
   const linhas = useMemo(() => {
     return (registros ?? [])
@@ -386,10 +383,7 @@ function MeiPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={cn(
-                            "rounded-md border-transparent font-medium",
-                            l.faixa.badge,
-                          )}
+                          className={cn("rounded-md border-transparent font-medium", l.faixa.badge)}
                         >
                           {l.faixa.badgeLabel}
                         </Badge>
@@ -430,7 +424,7 @@ function MeiPage() {
           <DialogHeader>
             <DialogTitle>Atualizar faturamento</DialogTitle>
             <DialogDescription>
-              {editando ? nomePorId.get(editando.cliente_id) ?? "Cliente" : ""}
+              {editando ? (nomePorId.get(editando.cliente_id) ?? "Cliente") : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">

@@ -29,18 +29,28 @@ export type OpcoesRelatorioEsporadicos = {
 
 /** Agrupa por cliente, do maior para o menor valor. */
 export function agruparPorCliente(linhas: LinhaRelatorioEsporadico[]) {
-  const mapa = new Map<string, { cliente: LinhaRelatorioEsporadico; notas: LinhaRelatorioEsporadico[]; total: number }>();
+  const mapa = new Map<
+    string,
+    { cliente: LinhaRelatorioEsporadico; notas: LinhaRelatorioEsporadico[]; total: number }
+  >();
   for (const l of linhas) {
     const g = mapa.get(l.cliente_esporadico_id) ?? { cliente: l, notas: [], total: 0 };
     g.notas.push(l);
     g.total += valorDaNota(l.valor_cobranca);
     mapa.set(l.cliente_esporadico_id, g);
   }
-  return [...mapa.values()].sort((a, b) => b.total - a.total || a.cliente.nome.localeCompare(b.cliente.nome));
+  return [...mapa.values()].sort(
+    (a, b) => b.total - a.total || a.cliente.nome.localeCompare(b.cliente.nome),
+  );
 }
 
 /** Texto pronto para WhatsApp/e-mail, com subtotal por cliente e total. */
-export function mensagemFinanceiro({ linhas, periodo, para = "Financeiro", observacao }: OpcoesRelatorioEsporadicos) {
+export function mensagemFinanceiro({
+  linhas,
+  periodo,
+  para = "Financeiro",
+  observacao,
+}: OpcoesRelatorioEsporadicos) {
   const grupos = agruparPorCliente(linhas);
   const total = linhas.reduce((s, l) => s + valorDaNota(l.valor_cobranca), 0);
   let t = `Olá, ${para}! Segue o relatório de clientes esporádicos (${periodo.toLowerCase()}) para cobrança.\n`;
@@ -99,7 +109,9 @@ export function gerarRelatorioEsporadicosPdf({
   doc.setFontSize(9);
   doc.setTextColor(...CINZA);
   doc.text("Notas emitidas para nao clientes, para cobranca", 14, 47.5);
-  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy")}`, largura - 14, 47.5, { align: "right" });
+  doc.text(`Emitido em ${format(new Date(), "dd/MM/yyyy")}`, largura - 14, 47.5, {
+    align: "right",
+  });
 
   // Resumo
   let y = 58;
@@ -146,7 +158,9 @@ export function gerarRelatorioEsporadicosPdf({
     doc.setFontSize(8.5);
     doc.setTextColor(...CINZA);
     doc.text(
-      semAcento(`${d.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(d)}${g.cliente.contato ? ` · ${g.cliente.contato}` : ""}`),
+      semAcento(
+        `${d.length === 11 ? "CPF" : "CNPJ"} ${formatarDocumento(d)}${g.cliente.contato ? ` · ${g.cliente.contato}` : ""}`,
+      ),
       14,
       y + 8.5,
     );
@@ -158,7 +172,9 @@ export function gerarRelatorioEsporadicosPdf({
         format(parseISO(n.data_emissao), "dd/MM/yyyy"),
         semAcento(TIPO_META[n.tipo_emissao].label),
         STATUS_LABEL[n.status],
-        n.repassado_financeiro_em ? `Repassada ${format(parseISO(n.repassado_financeiro_em), "dd/MM")}` : "Nova",
+        n.repassado_financeiro_em
+          ? `Repassada ${format(parseISO(n.repassado_financeiro_em), "dd/MM")}`
+          : "Nova",
         formatarReais(valorDaNota(n.valor_cobranca)),
       ]),
       theme: "plain",
@@ -205,7 +221,11 @@ export function gerarRelatorioEsporadicosPdf({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...CINZA);
-    doc.text(semAcento(`${escritorio} · gerado pelo Ofis · pagina ${i} de ${paginas}`), 14, doc.internal.pageSize.getHeight() - 8);
+    doc.text(
+      semAcento(`${escritorio} · gerado pelo Ofis · pagina ${i} de ${paginas}`),
+      14,
+      doc.internal.pageSize.getHeight() - 8,
+    );
   }
 
   doc.save(`ofis-esporadicos-${format(new Date(), "yyyy-MM-dd")}.pdf`);

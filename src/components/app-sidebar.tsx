@@ -31,12 +31,7 @@ import { useTema } from "@/lib/tema";
 import { cn } from "@/lib/utils";
 import type { FileRoutesByTo } from "@/routeTree.gen";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type ItemNav = { to: keyof FileRoutesByTo; label: string; icon: LucideIcon };
 
@@ -162,7 +157,11 @@ export function AppSidebar() {
                 aria-label={compacto ? "Expandir menu" : "Recolher menu"}
                 aria-expanded={!compacto}
               >
-                {compacto ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+                {compacto ? (
+                  <PanelLeftOpen className="size-4" />
+                ) : (
+                  <PanelLeftClose className="size-4" />
+                )}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -272,7 +271,9 @@ export function AppSidebar() {
                 <p className="truncate text-sm font-medium">
                   {email ? email.split("@")[0] : "Usuário"}
                 </p>
-                <p className="truncate text-xs text-sidebar-foreground/55">{email || "Setor fiscal"}</p>
+                <p className="truncate text-xs text-sidebar-foreground/55">
+                  {email || "Setor fiscal"}
+                </p>
               </div>
             )}
             <Tooltip>

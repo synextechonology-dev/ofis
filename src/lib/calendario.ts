@@ -12,12 +12,7 @@ export type EventoCalendario = {
   atualizado_em: string;
 };
 
-export const TIPOS_EVENTO: TipoEvento[] = [
-  "vencimento_das",
-  "obrigacao",
-  "lembrete",
-  "reuniao",
-];
+export const TIPOS_EVENTO: TipoEvento[] = ["vencimento_das", "obrigacao", "lembrete", "reuniao"];
 
 export const TIPO_EVENTO_META: Record<
   TipoEvento,
