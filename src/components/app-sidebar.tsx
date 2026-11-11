@@ -18,6 +18,7 @@ import {
   FileCheck,
   MessageSquare,
   UserPlus,
+  UserCog,
   PanelLeftClose,
   PanelLeftOpen,
   Moon,
@@ -27,6 +28,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 import { supabase } from "@/lib/supabase";
+import { useMeuPapel } from "@/lib/equipe";
 import { useTema } from "@/lib/tema";
 import { cn } from "@/lib/utils";
 import type { FileRoutesByTo } from "@/routeTree.gen";
@@ -72,6 +74,12 @@ const GRUPOS: { titulo: string; itens: ItemNav[] }[] = [
   },
 ];
 
+/** Só aparece para administradores (a página também se protege sozinha). */
+const GRUPO_ADMIN: { titulo: string; itens: ItemNav[] } = {
+  titulo: "Administração",
+  itens: [{ to: "/equipe", label: "Equipe", icon: UserCog }],
+};
+
 const CHAVE_RECOLHIDO = "ofis-menu-recolhido";
 
 function iniciais(email: string) {
@@ -88,6 +96,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { tema, setTema } = useTema();
+  const { data: eu } = useMeuPapel();
+  const grupos = eu?.papel === "admin" ? [...GRUPOS, GRUPO_ADMIN] : GRUPOS;
 
   useEffect(() => {
     setOpen(false);
@@ -171,7 +181,7 @@ export function AppSidebar() {
         </div>
 
         <nav className="scroll-oculto flex-1 overflow-y-auto px-3 pb-3" aria-label="Menu principal">
-          {GRUPOS.map((grupo) => (
+          {grupos.map((grupo) => (
             <div key={grupo.titulo} className="mt-3 first:mt-1">
               {compacto ? (
                 <div className="mx-2 my-2 h-px bg-sidebar-border first:hidden" />

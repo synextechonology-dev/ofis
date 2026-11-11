@@ -17,6 +17,7 @@ import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authentic
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedComunicacoesRouteImport } from './routes/_authenticated/comunicacoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEsporadicosRouteImport } from './routes/_authenticated/esporadicos'
 import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
 import { Route as AuthenticatedLancarNotaRouteImport } from './routes/_authenticated/lancar-nota'
@@ -64,6 +65,11 @@ const AuthenticatedComunicacoesRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEsporadicosRoute =
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/comunicacoes': typeof AuthenticatedComunicacoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/esporadicos': typeof AuthenticatedEsporadicosRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/lancar-nota': typeof AuthenticatedLancarNotaRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/comunicacoes': typeof AuthenticatedComunicacoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/esporadicos': typeof AuthenticatedEsporadicosRoute
   '/historico': typeof AuthenticatedHistoricoRoute
   '/lancar-nota': typeof AuthenticatedLancarNotaRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/comunicacoes': typeof AuthenticatedComunicacoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/esporadicos': typeof AuthenticatedEsporadicosRoute
   '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
   '/_authenticated/lancar-nota': typeof AuthenticatedLancarNotaRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/comunicacoes'
     | '/dashboard'
+    | '/equipe'
     | '/esporadicos'
     | '/historico'
     | '/lancar-nota'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/comunicacoes'
     | '/dashboard'
+    | '/equipe'
     | '/esporadicos'
     | '/historico'
     | '/lancar-nota'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/comunicacoes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/equipe'
     | '/_authenticated/esporadicos'
     | '/_authenticated/historico'
     | '/_authenticated/lancar-nota'
@@ -281,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/equipe': {
+      id: '/_authenticated/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/esporadicos': {
       id: '/_authenticated/esporadicos'
       path: '/esporadicos'
@@ -346,6 +365,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedComunicacoesRoute: typeof AuthenticatedComunicacoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedEsporadicosRoute: typeof AuthenticatedEsporadicosRoute
   AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
   AuthenticatedLancarNotaRoute: typeof AuthenticatedLancarNotaRoute
@@ -362,6 +382,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedComunicacoesRoute: AuthenticatedComunicacoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedEsporadicosRoute: AuthenticatedEsporadicosRoute,
   AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
   AuthenticatedLancarNotaRoute: AuthenticatedLancarNotaRoute,

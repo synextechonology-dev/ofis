@@ -50,14 +50,20 @@ Use `mensagemDeErro()` de `src/lib/supabase.ts` para mostrar esses erros em port
 - `anon` não tem nenhuma permissão nas tabelas. Ninguém tem `TRUNCATE`.
 - A chave em `src/lib/supabase.ts` é a **chave pública (anon)**; é normal estar no front. Nunca coloque a `service_role` no código.
 
-### Tela de equipe (ainda não existe no app)
-Hoje a equipe é gerida pelo SQL Editor do Supabase:
+### Tela de equipe (`/equipe`, só administradores) — desde 11/11/2026
+- `public.listar_equipe()` (`security definer`): membros com e-mail, nome e último acesso (vêm de `auth.users`).
+  Só admin consegue chamar; os outros recebem `42501`.
+- Gatilho `trg_manter_um_admin` (função `privado.manter_um_admin`): recusa qualquer alteração ou exclusão em `equipe`
+  que deixe o escritório sem administrador ativo (`23514`). Vale também para apagar a conta do admin no painel.
+- A tela muda papel e ativa/desativa. **Convite continua pelo painel** (exige `service_role`).
+
+Quem já tem conta mas está fora da equipe (não aparece na tela) ainda entra pelo SQL Editor:
 ```sql
--- dar acesso a quem já tem conta
 insert into public.equipe (user_id) select id from auth.users where email = 'pessoa@exemplo.com';
--- tirar acesso
-update public.equipe set ativo = false where user_id = (select id from auth.users where email = 'pessoa@exemplo.com');
 ```
+
+**A confirmar no próximo convite:** se a pessoa convidada aparece sozinha na tela. Há indício de que o Supabase grava
+`invited_at` logo depois de criar a conta, e o gatilho `trg_convidado_equipe` roda só no insert.
 
 ## Backups feitos em 10/11/2026 (schema `backup`, sem acesso pela API)
 `clientes_20261110`, `clientes_20261110_antes_juncao`, `notas_fiscais_20261110`, `notas_fiscais_20261110_antes_juncao`,

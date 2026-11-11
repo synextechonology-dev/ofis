@@ -37,7 +37,7 @@ na versão atual e resolva os conflitos.
 
 ## 🔜 Próximos (na ordem sugerida)
 
-1. **Tela de equipe** (admin): listar membros, ativar/desativar, mudar papel. Tabela `equipe` já existe.
+1. ~~**Tela de equipe**~~ ✅ feita em 11/11/2026 (`/equipe`, migração `20261111140000_tela_equipe.sql`).
 2. **Telas da prévia ainda não portadas** — comparar cada uma com `docs/previa/ofis-previa.html`:
    - Página do cliente MEI (clicar no cliente abre notas, % do limite e barra de progresso; faixas 60/85/100% em `lib/mei.ts`,
      a prévia usa 80/100 — **João precisa decidir**).
