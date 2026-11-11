@@ -56,7 +56,7 @@ function AuthPage() {
       toast.error("Não foi possível entrar. Verifique suas credenciais.");
       return;
     }
-    toast.success("Bem-vindo de volta!");
+    toast.success("Acesso liberado.");
     navigate({ to: "/dashboard", replace: true });
   }
 
@@ -67,7 +67,7 @@ function AuthPage() {
           <div className="flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <ReceiptText className="size-6" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Ofis</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Ofis</h1>
           <p className="text-sm text-muted-foreground">Gestão de notas fiscais emitidas</p>
         </div>
 

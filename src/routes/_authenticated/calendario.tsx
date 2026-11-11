@@ -170,7 +170,7 @@ function CalendarioPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">Calendário Fiscal</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Calendário Fiscal</h1>
         <p className="text-sm text-muted-foreground">
           Vencimentos, obrigações, tarefas e emissões organizados por dia.
         </p>
@@ -236,39 +236,43 @@ function CalendarioPage() {
                       >
                         <span
                           className={cn(
-                            "text-xs font-semibold",
-                            isSameDay(dia, hoje) && "text-primary",
+                            "nums text-xs font-semibold",
+                            isSameDay(dia, hoje) && "text-accent-foreground",
                           )}
                         >
                           {format(dia, "d")}
                         </span>
                         <div className="flex flex-wrap gap-0.5">
-                          {evs.slice(0, 2).map((ev) => (
+                          {evs.slice(0, 1).map((ev) => (
                             <span
                               key={ev.id}
-                              className={cn(
-                                "max-w-full truncate rounded px-1 py-0.5 text-[10px] font-medium",
-                                TIPO_EVENTO_META[ev.tipo].badgeClass,
-                              )}
+                              className="flex min-w-0 max-w-full items-center gap-1 text-xs text-foreground"
                             >
-                              {ev.titulo}
+                              <i
+                                aria-hidden
+                                className={cn(
+                                  "size-2 shrink-0 rounded-full",
+                                  TIPO_EVENTO_META[ev.tipo].dotClass,
+                                )}
+                              />
+                              <span className="truncate">{ev.titulo}</span>
                             </span>
                           ))}
-                          {evs.length > 2 ? (
-                            <span className="text-[10px] text-muted-foreground">
-                              +{evs.length - 2}
+                          {evs.length > 1 ? (
+                            <span className="nums text-xs text-muted-foreground">
+                              +{evs.length - 1}
                             </span>
                           ) : null}
                         </div>
                         <div className="mt-auto flex items-center gap-1.5">
                           {qtdNotas > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-success">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-success">
                               <span className="size-1.5 rounded-full bg-success" />
                               {qtdNotas}
                             </span>
                           ) : null}
                           {pendentes > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-warning">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-warning">
                               <span className="size-1.5 rounded-full bg-warning" />
                               {pendentes}
                             </span>
@@ -308,12 +312,7 @@ function CalendarioPage() {
                           {ev.descricao ? (
                             <p className="text-xs text-muted-foreground">{ev.descricao}</p>
                           ) : null}
-                          <Badge
-                            className={cn(
-                              "mt-1 rounded-md border-transparent text-[10px]",
-                              meta.badgeClass,
-                            )}
-                          >
+                          <Badge className={cn("mt-1 rounded-[4px] text-xs", meta.badgeClass)}>
                             {meta.label}
                           </Badge>
                         </div>
@@ -345,7 +344,7 @@ function CalendarioPage() {
                       <div className="flex shrink-0 gap-1">
                         <Badge
                           className={cn(
-                            "rounded-md border-transparent text-[10px]",
+                            "rounded-[4px] text-xs",
                             PRIORIDADE_META[t.prioridade].badgeClass,
                           )}
                         >
@@ -353,7 +352,7 @@ function CalendarioPage() {
                         </Badge>
                         <Badge
                           className={cn(
-                            "rounded-md border-transparent text-[10px]",
+                            "rounded-[4px] text-xs",
                             STATUS_TAREFA_META[t.status].badgeClass,
                           )}
                         >

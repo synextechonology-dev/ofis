@@ -208,7 +208,7 @@ function RentabilidadePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">Painel de Rentabilidade</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Painel de Rentabilidade</h1>
         <p className="text-sm text-muted-foreground">
           Esforço de atendimento por cliente no mês atual, cruzando notas, obrigações e
           comunicações.
@@ -455,7 +455,7 @@ function RentabilidadePage() {
                 <span>{detalheLinha.qtdCom} comunicação(ões) aberta(s) × 2</span>
                 <span className="font-semibold">{detalheLinha.qtdCom * 2}</span>
               </li>
-              <li className="flex justify-between rounded-md bg-primary/10 px-3 py-2 font-semibold text-primary">
+              <li className="flex justify-between rounded-md bg-secondary px-3 py-2 font-semibold text-foreground">
                 <span>Score total</span>
                 <span>{detalheLinha.score}</span>
               </li>

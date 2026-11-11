@@ -228,29 +228,29 @@ function TarefasPage() {
     if (urgentes.length) {
       lista.push({
         icon: AlertTriangle,
-        tone: "bg-destructive/10 text-destructive",
+        tone: "bg-destructive/12 text-destructive",
         texto: `Você tem ${urgentes.length} tarefa${urgentes.length > 1 ? "s" : ""} urgente${urgentes.length > 1 ? "s" : ""}! Priorize-as antes das demais.`,
       });
     }
     if (new Date().getHours() >= 14 && taxa < 50 && tarefasHoje.length > 0) {
       lista.push({
         icon: Gauge,
-        tone: "bg-warning/10 text-warning",
+        tone: "bg-warning/12 text-warning",
         texto: "Metade do dia passou. Acelere o ritmo para bater a meta!",
       });
     }
     if (tarefasHoje.length > 0 && taxa >= 100) {
       lista.push({
         icon: Trophy,
-        tone: "bg-success/10 text-success",
-        texto: "🎉 Todas as tarefas concluídas! Ótimo dia de trabalho.",
+        tone: "bg-success/12 text-success",
+        texto: "Todas as tarefas concluídas. Ótimo dia de trabalho.",
       });
     }
     const cat = categoriaMaisPendente(tarefasHoje);
     if (cat) {
       lista.push({
         icon: Lightbulb,
-        tone: "bg-primary/10 text-primary",
+        tone: "bg-secondary text-foreground",
         texto: `A categoria ${CATEGORIA_META[cat].label} tem mais tarefas abertas hoje.`,
       });
     }
@@ -320,7 +320,7 @@ function TarefasPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Tarefas do Dia</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Tarefas do Dia</h1>
           <p className="text-sm text-muted-foreground">
             {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
@@ -784,7 +784,7 @@ function TarefasPage() {
         <Card className="h-fit rounded-lg border-border shadow-card lg:sticky lg:top-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Lightbulb className="size-4 text-warning" />
+              <Lightbulb className="size-[18px] text-muted-foreground" aria-hidden />
               Insights do dia
             </CardTitle>
           </CardHeader>

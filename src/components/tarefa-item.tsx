@@ -30,7 +30,7 @@ export function PrioridadeBadge({ prioridade }: { prioridade: PrioridadeTarefa }
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
         meta.badgeClass,
       )}
     >
@@ -45,7 +45,7 @@ export function CategoriaBadge({ categoria }: { categoria: CategoriaTarefa }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
+        "inline-flex items-center gap-1 rounded-[4px] px-2 py-0.5 text-xs font-medium",
         meta.badgeClass,
       )}
     >
@@ -60,7 +60,7 @@ export function StatusTarefaBadge({ status }: { status: StatusTarefa }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
         meta.badgeClass,
       )}
     >
@@ -141,7 +141,7 @@ export function TarefaItem({
         checked={concluida}
         onCheckedChange={() => onToggleConcluida(tarefa)}
         aria-label={concluida ? "Reabrir tarefa" : "Concluir tarefa"}
-        className="mt-0.5 size-5 transition-transform active:scale-90 data-[state=checked]:scale-105 data-[state=checked]:border-success data-[state=checked]:bg-success"
+        className="mt-0.5 size-5 data-[state=checked]:border-success data-[state=checked]:bg-success"
       />
 
       <div className="min-w-0 flex-1">

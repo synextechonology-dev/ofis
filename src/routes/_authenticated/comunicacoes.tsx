@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KpiCard } from "@/components/kpi-card";
 import { EmptyState } from "@/components/empty-state";
+import { StatusPill } from "@/components/status-badge";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -187,7 +188,7 @@ function ComunicacoesPage() {
       );
     return (
       <div className="space-y-3">
-        {itens.map((c, index) => (
+        {itens.map((c) => (
           <div
             key={c.id}
             className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-start sm:justify-between"
@@ -195,7 +196,7 @@ function ComunicacoesPage() {
             <div className="min-w-0 space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
-                  className={`rounded-md border-transparent font-medium ${TIPO_COMUNICACAO_META[c.tipo].className}`}
+                  className={`rounded-[4px] font-medium ${TIPO_COMUNICACAO_META[c.tipo].className}`}
                 >
                   {TIPO_COMUNICACAO_META[c.tipo].label}
                 </Badge>
@@ -213,9 +214,7 @@ function ComunicacoesPage() {
                   <Check className="size-4" /> Marcar como resolvida
                 </Button>
               ) : (
-                <Badge className="rounded-md border-transparent bg-success text-success-foreground">
-                  Resolvida
-                </Badge>
+                <StatusPill tom="success">Resolvida</StatusPill>
               )}
               <ConfirmDeleteButton
                 title={`Excluir "${c.titulo}"?`}
@@ -234,7 +233,7 @@ function ComunicacoesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">Central de Comunicação</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Central de Comunicação</h1>
         <p className="text-sm text-muted-foreground">
           Solicitações, retornos, pendências e informativos por cliente.
         </p>

@@ -216,7 +216,7 @@ function AnalisesPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Análises</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Análises</h1>
           <p className="text-sm text-muted-foreground">
             Insights sobre volume, clientes e padrões de emissão das notas fiscais.
           </p>
@@ -236,7 +236,7 @@ function AnalisesPage() {
       <Card className="rounded-lg border-border shadow-card">
         <CardHeader className="gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex items-center gap-2">
-            <Trophy className="size-4 text-warning" />
+            <Trophy className="size-[18px] text-muted-foreground" aria-hidden />
             <CardTitle className="text-base">Ranking de clientes</CardTitle>
           </div>
           <div className="grid gap-3 sm:grid-cols-3 sm:items-end">
@@ -334,7 +334,7 @@ function AnalisesPage() {
       {/* Bloco 2 — Evolução mensal */}
       <Card className="rounded-lg border-border shadow-card">
         <CardHeader className="flex-row items-center gap-2 space-y-0">
-          <BarChart3 className="size-4 text-primary" />
+          <BarChart3 className="size-[18px] text-muted-foreground" aria-hidden />
           <CardTitle className="text-base">Evolução mensal por tipo (6 meses)</CardTitle>
         </CardHeader>
         <CardContent className="h-80">
@@ -372,14 +372,12 @@ function AnalisesPage() {
 
       {/* Bloco 3 — Taxa de cancelamento/denegamento */}
       <section className="grid gap-4 lg:grid-cols-5">
-        <Card
-          className={cn(
-            "rounded-lg shadow-kpi lg:col-span-2",
-            alerta ? "border-2 border-destructive" : "border border-border",
-          )}
-        >
+        <Card className={cn("rounded-lg shadow-kpi lg:col-span-2", "border border-border")}>
           <CardHeader className="flex-row items-center gap-2 space-y-0">
-            <AlertTriangle className={cn("size-4", alerta ? "text-destructive" : "text-warning")} />
+            <AlertTriangle
+              className={cn("size-[18px]", alerta ? "text-destructive" : "text-muted-foreground")}
+              aria-hidden
+            />
             <CardTitle className="text-base">Taxa de não autorizadas (mês)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -389,7 +387,7 @@ function AnalisesPage() {
               <>
                 <p
                   className={cn(
-                    "text-4xl font-bold",
+                    "nums text-4xl font-semibold",
                     alerta ? "text-destructive" : "text-foreground",
                   )}
                 >
@@ -453,7 +451,7 @@ function AnalisesPage() {
       {/* Bloco 4 — Dias mais movimentados */}
       <Card className="rounded-lg border-border shadow-card">
         <CardHeader className="flex-row items-center gap-2 space-y-0">
-          <CalendarClock className="size-4 text-primary" />
+          <CalendarClock className="size-[18px] text-muted-foreground" aria-hidden />
           <CardTitle className="text-base">
             Dias mais movimentados — {format(hoje, "MMMM 'de' yyyy", { locale: ptBR })}
           </CardTitle>
@@ -488,13 +486,13 @@ function AnalisesPage() {
                               "flex h-10 items-center justify-center rounded-md text-xs font-semibold transition-colors",
                               dia.doMes
                                 ? intensidade > 0.6
-                                  ? "text-primary-foreground"
+                                  ? "text-background"
                                   : "text-foreground"
                                 : "text-muted-foreground/40",
                             )}
                             style={{
                               backgroundColor: dia.doMes
-                                ? `color-mix(in oklab, var(--primary) ${Math.round(intensidade * 100)}%, var(--secondary))`
+                                ? `color-mix(in oklab, var(--foreground) ${Math.round(intensidade * 70)}%, var(--secondary))`
                                 : "transparent",
                             }}
                           >

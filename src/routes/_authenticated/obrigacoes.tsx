@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { AlertTriangle, CalendarClock, Check, CheckCircle2, Clock, FileCheck } from "lucide-react";
 
-import { supabase } from "@/lib/supabase";
+import { supabase, mensagemDeErro } from "@/lib/supabase";
 import type { Cliente } from "@/lib/clientes";
 import {
   STATUS_OBRIGACAO_META,
@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KpiCard } from "@/components/kpi-card";
 import { EmptyState } from "@/components/empty-state";
+import { StatusPill } from "@/components/status-badge";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -183,7 +184,7 @@ function ObrigacoesPage() {
       setStatus("pendente");
       queryClient.invalidateQueries({ queryKey: ["obrigacoes"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Não foi possível adicionar."),
+    onError: (error: Error) => toast.error(mensagemDeErro(error, "Não foi possível adicionar.")),
   });
 
   const marcarEntregue = useMutation({
@@ -198,7 +199,7 @@ function ObrigacoesPage() {
       toast.success("Obrigação marcada como entregue.");
       queryClient.invalidateQueries({ queryKey: ["obrigacoes"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Não foi possível atualizar."),
+    onError: (error: Error) => toast.error(mensagemDeErro(error, "Não foi possível atualizar.")),
   });
 
   const excluir = useMutation({
@@ -210,24 +211,14 @@ function ObrigacoesPage() {
       toast.success("Obrigação excluída.");
       queryClient.invalidateQueries({ queryKey: ["obrigacoes"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Não foi possível excluir."),
+    onError: (error: Error) => toast.error(mensagemDeErro(error, "Não foi possível excluir.")),
   });
 
   function Urgencia({ o }: { o: Obrigacao }) {
     if (o.status === "entregue") return null;
     const dias = differenceInCalendarDays(parseISO(o.vencimento), hoje);
-    if (dias < 0)
-      return (
-        <Badge className="rounded-md border-transparent bg-destructive font-medium text-destructive-foreground">
-          Atrasada
-        </Badge>
-      );
-    if (dias <= 3)
-      return (
-        <Badge className="animate-pulse rounded-md border-transparent bg-warning font-medium text-warning-foreground">
-          Vence em breve
-        </Badge>
-      );
+    if (dias < 0) return <StatusPill tom="danger">Atrasada</StatusPill>;
+    if (dias <= 3) return <StatusPill tom="warning">Vence em breve</StatusPill>;
     return null;
   }
 
@@ -265,32 +256,32 @@ function ObrigacoesPage() {
           <TableBody>
             {itens.map((o) => (
               <TableRow key={o.id} className="hover:bg-row-hover">
-                <TableCell className="font-medium">
+                <TableCell className="font-medium text-foreground">
                   {o.cliente_id ? (nomePorId.get(o.cliente_id) ?? "Cliente removido") : "Geral"}
                 </TableCell>
                 <TableCell>
                   <Badge
                     className={cn(
-                      "rounded-md border-transparent font-medium",
+                      "rounded-[4px] font-medium",
                       TIPO_OBRIGACAO_META[o.tipo]?.className ?? "bg-muted text-muted-foreground",
                     )}
                   >
                     {TIPO_OBRIGACAO_META[o.tipo]?.label ?? o.tipo}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="nums text-muted-foreground">
                   {format(parseISO(o.competencia), "MM/yyyy", { locale: ptBR })}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <span>{format(parseISO(o.vencimento), "dd/MM/yyyy")}</span>
+                    <span className="nums">{format(parseISO(o.vencimento), "dd/MM/yyyy")}</span>
                     <Urgencia o={o} />
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge
                     className={cn(
-                      "rounded-md border-transparent font-medium",
+                      "rounded-full border-transparent font-medium",
                       STATUS_OBRIGACAO_META[o.status]?.className ??
                         "bg-muted text-muted-foreground",
                     )}
@@ -334,7 +325,7 @@ function ObrigacoesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">Obrigações Acessórias</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Obrigações Acessórias</h1>
         <p className="text-sm text-muted-foreground">
           Controle de entregas fiscais por cliente, com vencimentos e alertas de atraso.
         </p>
@@ -365,10 +356,10 @@ function ObrigacoesPage() {
         />
       </section>
 
-      <Card className="rounded-lg border-l-4 border-l-warning shadow-card">
+      <Card className="rounded-lg border-border shadow-card">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarClock className="size-4.5 text-warning" />
+            <CalendarClock className="size-[18px] text-muted-foreground" aria-hidden />
             Resumo dos próximos 7 dias
           </CardTitle>
         </CardHeader>

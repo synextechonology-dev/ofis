@@ -12,13 +12,13 @@ import { TIPOS, TIPO_META } from "@/lib/nf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KpiCard } from "@/components/kpi-card";
 import { EmptyState } from "@/components/empty-state";
 import { TipoBadge } from "@/components/tipo-badge";
-import { StatusBadge } from "@/components/status-badge";
+import { StatusBadge, StatusPill } from "@/components/status-badge";
+import { normalizar } from "@/lib/navegacao";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import {
   Dialog,
@@ -156,7 +156,7 @@ function ClientesPage() {
   }, [lista]);
 
   const filtrados = enriquecidos.filter((c) => {
-    const okBusca = c.nome.toLowerCase().includes(busca.trim().toLowerCase());
+    const okBusca = normalizar(c.nome).includes(normalizar(busca.trim()));
     const okTipo = filtroTipo === "todos" || c.tipo_emissao === filtroTipo;
     return okBusca && okTipo;
   });
@@ -174,7 +174,8 @@ function ClientesPage() {
       setTipo("comercio");
       queryClient.invalidateQueries({ queryKey: ["clientes"] });
     },
-    onError: (error: Error) => toast.error(error.message || "Não foi possível cadastrar."),
+    onError: (error: Error & { code?: string }) =>
+      toast.error(mensagemDeErro(error, "Não foi possível cadastrar o cliente.")),
   });
 
   const excluir = useMutation({
@@ -209,7 +210,7 @@ function ClientesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Clientes</h1>
         <p className="text-sm text-muted-foreground">
           Cadastro e acompanhamento da atividade de emissão por cliente.
         </p>
@@ -285,7 +286,7 @@ function ClientesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" disabled={adicionar.isPending} className="hover-scale">
+            <Button type="submit" disabled={adicionar.isPending}>
               <Plus className="size-4" /> Adicionar
             </Button>
           </form>
@@ -353,26 +354,24 @@ function ClientesPage() {
                 <TableBody>
                   {filtrados.map((cliente, index) => (
                     <TableRow key={cliente.id} className="">
-                      <TableCell className="font-medium">{cliente.nome}</TableCell>
+                      <TableCell className="font-medium text-foreground">{cliente.nome}</TableCell>
                       <TableCell>
                         <TipoBadge tipo={cliente.tipo_emissao} />
                       </TableCell>
-                      <TableCell className="text-right font-semibold">{cliente.notasMes}</TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="nums text-right font-semibold text-foreground">
+                        {cliente.notasMes}
+                      </TableCell>
+                      <TableCell className="nums text-muted-foreground">
                         {cliente.ultima
                           ? `${format(parseISO(cliente.ultima), "dd/MM/yyyy", { locale: ptBR })} · ${differenceInCalendarDays(hoje, parseISO(cliente.ultima))}d`
                           : "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          className={
-                            cliente.ativo
-                              ? "rounded-md border-transparent bg-success text-success-foreground"
-                              : "rounded-md border-transparent bg-destructive text-destructive-foreground"
-                          }
-                        >
-                          {cliente.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
+                        {cliente.ativo ? (
+                          <StatusPill tom="success">Ativo</StatusPill>
+                        ) : (
+                          <StatusPill tom="neutro">Inativo</StatusPill>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
@@ -385,7 +384,7 @@ function ClientesPage() {
                           </Button>
                           <ConfirmDeleteButton
                             title={`Excluir cliente ${cliente.nome}?`}
-                            description="O cliente será removido do cadastro. As notas já lançadas não são afetadas."
+                            description="O cliente sai do cadastro. Clientes com notas lançadas não podem ser excluídos: o sistema avisa e não apaga nada."
                             onConfirm={async () => {
                               await excluir.mutateAsync(cliente.id);
                             }}
@@ -409,7 +408,10 @@ function ClientesPage() {
           <DialogHeader>
             <DialogTitle>Histórico de {historicoCliente}</DialogTitle>
             <DialogDescription>
-              {notasDoHistorico.length} nota(s) fiscal(is) registrada(s) para este cliente.
+              <span className="nums">{notasDoHistorico.length}</span>{" "}
+              {notasDoHistorico.length === 1
+                ? "nota fiscal registrada para este cliente."
+                : "notas fiscais registradas para este cliente."}
             </DialogDescription>
           </DialogHeader>
           {notasDoHistorico.length === 0 ? (
@@ -421,7 +423,7 @@ function ClientesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Número NF</TableHead>
+                  <TableHead>Nº NF</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -429,8 +431,8 @@ function ClientesPage() {
               <TableBody>
                 {notasDoHistorico.map((nota) => (
                   <TableRow key={nota.id}>
-                    <TableCell className="font-medium">{nota.numero_nf}</TableCell>
-                    <TableCell>
+                    <TableCell className="font-mono text-sm">{nota.numero_nf}</TableCell>
+                    <TableCell className="nums">
                       {format(parseISO(nota.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
                     </TableCell>
                     <TableCell>
