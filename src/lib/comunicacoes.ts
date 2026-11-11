@@ -22,8 +22,8 @@ export const TIPOS_COMUNICACAO: TipoComunicacao[] = [
 
 export const TIPO_COMUNICACAO_META: Record<TipoComunicacao, { label: string; className: string }> =
   {
-    solicitacao: { label: "Solicitação", className: "bg-primary text-primary-foreground" },
-    retorno: { label: "Retorno", className: "bg-success text-success-foreground" },
-    pendencia: { label: "Pendência", className: "bg-destructive text-destructive-foreground" },
-    informativo: { label: "Informativo", className: "bg-muted text-muted-foreground" },
+    solicitacao: { label: "Solicitação", className: "border border-border bg-transparent text-muted-foreground" },
+    retorno: { label: "Retorno", className: "border border-border bg-transparent text-muted-foreground" },
+    pendencia: { label: "Pendência", className: "border border-border bg-transparent text-muted-foreground" },
+    informativo: { label: "Informativo", className: "border border-border bg-transparent text-muted-foreground" },
   };

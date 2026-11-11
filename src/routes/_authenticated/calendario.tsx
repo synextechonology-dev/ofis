@@ -301,7 +301,7 @@ function CalendarioPage() {
                     return (
                       <div
                         key={ev.id}
-                        className="row-in flex items-start justify-between gap-2 rounded-md border border-border p-2"
+                        className="flex items-start justify-between gap-2 rounded-md border border-border p-2"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">{ev.titulo}</p>

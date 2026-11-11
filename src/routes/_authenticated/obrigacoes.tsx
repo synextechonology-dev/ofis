@@ -264,7 +264,7 @@ function ObrigacoesPage() {
           </TableHeader>
           <TableBody>
             {itens.map((o) => (
-              <TableRow key={o.id} className="row-in hover:bg-row-hover">
+              <TableRow key={o.id} className="hover:bg-row-hover">
                 <TableCell className="font-medium">
                   {o.cliente_id ? (nomePorId.get(o.cliente_id) ?? "Cliente removido") : "Geral"}
                 </TableCell>
@@ -365,7 +365,7 @@ function ObrigacoesPage() {
         />
       </section>
 
-      <Card className="block-in rounded-lg border-l-4 border-l-warning shadow-card">
+      <Card className="rounded-lg border-l-4 border-l-warning shadow-card">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarClock className="size-4.5 text-warning" />

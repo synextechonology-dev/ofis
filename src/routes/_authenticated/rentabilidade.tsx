@@ -382,8 +382,7 @@ function RentabilidadePage() {
                     return (
                       <TableRow
                         key={l.cliente.id}
-                        className="row-in"
-                        style={{ animationDelay: `${index * 25}ms` }}
+                        className=""
                       >
                         <TableCell className="font-medium">{l.cliente.nome}</TableCell>
                         <TableCell>

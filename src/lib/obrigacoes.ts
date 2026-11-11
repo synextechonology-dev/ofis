@@ -25,18 +25,18 @@ export const TIPOS_OBRIGACAO: TipoObrigacao[] = [
 ];
 
 export const TIPO_OBRIGACAO_META: Record<TipoObrigacao, { label: string; className: string }> = {
-  das: { label: "DAS", className: "bg-destructive text-destructive-foreground" },
-  pgdas: { label: "PGDAS", className: "bg-warning text-warning-foreground" },
-  dctf: { label: "DCTF", className: "bg-primary text-primary-foreground" },
-  efd: { label: "EFD", className: "bg-tipo-servico text-tipo-foreground" },
-  sped: { label: "SPED", className: "bg-chart-4 text-primary-foreground" },
-  defis: { label: "DEFIS", className: "bg-success text-success-foreground" },
-  outro: { label: "Outro", className: "bg-muted text-muted-foreground" },
+  das: { label: "DAS", className: "border border-border bg-transparent text-muted-foreground" },
+  pgdas: { label: "PGDAS", className: "border border-border bg-transparent text-muted-foreground" },
+  dctf: { label: "DCTF", className: "border border-border bg-transparent text-muted-foreground" },
+  efd: { label: "EFD", className: "border border-border bg-transparent text-muted-foreground" },
+  sped: { label: "SPED", className: "border border-border bg-transparent text-muted-foreground" },
+  defis: { label: "DEFIS", className: "border border-border bg-transparent text-muted-foreground" },
+  outro: { label: "Outro", className: "border border-border bg-transparent text-muted-foreground" },
 };
 
 export const STATUS_OBRIGACAO_META: Record<StatusObrigacao, { label: string; className: string }> =
   {
-    pendente: { label: "Pendente", className: "bg-warning text-warning-foreground" },
-    entregue: { label: "Entregue", className: "bg-success text-success-foreground" },
-    atrasada: { label: "Atrasada", className: "bg-destructive text-destructive-foreground" },
+    pendente: { label: "Pendente", className: "bg-warning/12 text-warning" },
+    entregue: { label: "Entregue", className: "bg-success/12 text-success" },
+    atrasada: { label: "Atrasada", className: "bg-destructive/12 text-destructive" },
   };

@@ -136,7 +136,7 @@ export function TarefaItem({
   const concluida = tarefa.status === "concluida";
 
   return (
-    <div className="group row-in flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:bg-row-hover">
+    <div className="group flex items-start gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:bg-row-hover">
       <Checkbox
         checked={concluida}
         onCheckedChange={() => onToggleConcluida(tarefa)}

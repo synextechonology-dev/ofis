@@ -41,12 +41,12 @@ export const STATUS_TAREFA_META: Record<
   pendente: {
     label: "Pendente",
     icon: CircleDashed,
-    badgeClass: "bg-muted text-muted-foreground",
+    badgeClass: "bg-secondary text-muted-foreground",
   },
   em_andamento: {
     label: "Em andamento",
     icon: Timer,
-    badgeClass: "bg-primary/12 text-primary",
+    badgeClass: "bg-secondary text-foreground",
   },
   concluida: {
     label: "Concluída",
@@ -62,25 +62,25 @@ export const PRIORIDADE_META: Record<
   urgente: {
     label: "Urgente",
     icon: Flame,
-    badgeClass: "bg-destructive text-destructive-foreground",
+    badgeClass: "bg-destructive/12 text-destructive",
     color: "var(--destructive)",
   },
   alta: {
     label: "Alta",
     icon: ArrowUp,
-    badgeClass: "bg-warning text-warning-foreground",
+    badgeClass: "bg-warning/12 text-warning",
     color: "var(--warning)",
   },
   normal: {
     label: "Normal",
     icon: Minus,
-    badgeClass: "bg-primary text-primary-foreground",
-    color: "var(--primary)",
+    badgeClass: "bg-secondary text-muted-foreground",
+    color: "var(--muted-foreground)",
   },
   baixa: {
     label: "Baixa",
     icon: ArrowDown,
-    badgeClass: "bg-muted text-muted-foreground",
+    badgeClass: "bg-secondary text-muted-foreground",
     color: "var(--muted-foreground)",
   },
 };
@@ -92,25 +92,25 @@ export const CATEGORIA_META: Record<
   fiscal: {
     label: "Fiscal",
     icon: Scale,
-    badgeClass: "bg-tipo-servico text-tipo-foreground",
-    color: "var(--tipo-servico)",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    color: "var(--muted-foreground)",
   },
   cliente: {
     label: "Cliente",
     icon: Users,
-    badgeClass: "bg-tipo-rural text-tipo-foreground",
-    color: "var(--tipo-rural)",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    color: "var(--muted-foreground)",
   },
   interno: {
     label: "Interno",
     icon: Building2,
-    badgeClass: "bg-warning text-warning-foreground",
-    color: "var(--warning)",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    color: "var(--muted-foreground)",
   },
   geral: {
     label: "Geral",
     icon: Layers,
-    badgeClass: "bg-muted text-muted-foreground",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
     color: "var(--muted-foreground)",
   },
 };

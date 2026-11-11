@@ -781,7 +781,7 @@ function TarefasPage() {
           ) : null}
         </div>
 
-        <Card className="block-in h-fit rounded-lg border-border shadow-card lg:sticky lg:top-6">
+        <Card className="h-fit rounded-lg border-border shadow-card lg:sticky lg:top-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Lightbulb className="size-4 text-warning" />

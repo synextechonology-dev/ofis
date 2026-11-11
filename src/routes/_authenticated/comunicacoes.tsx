@@ -190,8 +190,7 @@ function ComunicacoesPage() {
         {itens.map((c, index) => (
           <div
             key={c.id}
-            className="row-in flex flex-col gap-2 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-start sm:justify-between"
-            style={{ animationDelay: `${index * 25}ms` }}
+            className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-start sm:justify-between"
           >
             <div className="min-w-0 space-y-1">
               <div className="flex flex-wrap items-center gap-2">

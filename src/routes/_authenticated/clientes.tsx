@@ -354,8 +354,7 @@ function ClientesPage() {
                   {filtrados.map((cliente, index) => (
                     <TableRow
                       key={cliente.id}
-                      className="row-in"
-                      style={{ animationDelay: `${index * 25}ms` }}
+                      className=""
                     >
                       <TableCell className="font-medium">{cliente.nome}</TableCell>
                       <TableCell>

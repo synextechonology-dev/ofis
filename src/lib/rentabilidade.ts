@@ -17,27 +17,27 @@ export const COMPLEXIDADE_META: Record<
 > = {
   alta: {
     label: "Alta",
-    className: "bg-destructive text-destructive-foreground",
-    color: "var(--destructive)",
+    className: "border border-border bg-transparent text-muted-foreground",
+    color: "var(--foreground)",
   },
   media: {
     label: "Média",
-    className: "bg-warning text-warning-foreground",
-    color: "var(--warning)",
+    className: "border border-border bg-transparent text-muted-foreground",
+    color: "var(--muted-foreground)",
   },
   baixa: {
     label: "Baixa",
-    className: "bg-success text-success-foreground",
-    color: "var(--success)",
+    className: "border border-border bg-transparent text-muted-foreground",
+    color: "var(--chart-5)",
   },
 };
 
 export type NivelDemanda = { label: string; className: string };
 
 export function nivelDemanda(score: number): NivelDemanda {
-  if (score > 20) return { label: "Alta", className: "bg-destructive text-destructive-foreground" };
-  if (score >= 10) return { label: "Média", className: "bg-warning text-warning-foreground" };
-  return { label: "Baixa", className: "bg-success text-success-foreground" };
+  if (score > 20) return { label: "Alta", className: "bg-destructive/12 text-destructive" };
+  if (score >= 10) return { label: "Média", className: "bg-warning/12 text-warning" };
+  return { label: "Baixa", className: "bg-success/12 text-success" };
 }
 
 export function calcularScore(notas: number, obrigacoes: number, comunicacoes: number) {

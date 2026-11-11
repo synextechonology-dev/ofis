@@ -58,14 +58,6 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --color-row-hover: var(--row-hover);
-  --color-nav-1: var(--nav-1);
-  --color-nav-2: var(--nav-2);
-  --color-nav-3: var(--nav-3);
-  --color-nav-4: var(--nav-4);
-  --color-nav-5: var(--nav-5);
-  --color-nav-6: var(--nav-6);
-  --color-nav-7: var(--nav-7);
-  --color-nav-8: var(--nav-8);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -77,7 +69,6 @@
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.06);
   --shadow-elevated: 0 12px 32px rgb(0 0 0 / 0.18);
   --shadow-kpi: 0 1px 2px rgb(0 0 0 / 0.06);
-  --shadow-kpi-hover: 0 8px 20px -8px rgb(0 0 0 / 0.25);
 }
 
 :root {
@@ -118,15 +109,6 @@
   --chart-4: #2563EB;
   --chart-5: #A1A1AA;
   --row-hover: #EFEDE8;
-  /* Ícones do menu: neutros (o design system não usa uma cor por item). */
-  --nav-1: currentColor;
-  --nav-2: currentColor;
-  --nav-3: currentColor;
-  --nav-4: currentColor;
-  --nav-5: currentColor;
-  --nav-6: currentColor;
-  --nav-7: currentColor;
-  --nav-8: currentColor;
   --sidebar: #EDEBE6;
   --sidebar-foreground: #18181B;
   --sidebar-primary: #2563EB;
@@ -135,7 +117,6 @@
   --sidebar-accent-foreground: #18181B;
   --sidebar-border: #E2DFD8;
   --sidebar-ring: #2563EB;
-  --gradient-sidebar: linear-gradient(var(--sidebar), var(--sidebar));
 }
 
 .dark {
@@ -238,50 +219,7 @@
   }
 }
 
-@keyframes row-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes block-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@utility sidebar-gradient {
-  background-image: var(--gradient-sidebar);
-}
-
-@utility hover-lift {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-kpi-hover);
-  }
-}
-
-@utility block-in {
-  animation: block-in 0.35s ease-out both;
-}
-
-@utility row-in {
-  animation: row-in 0.25s ease-out both;
-}
+/* Sem animações de entrada, gradientes ou cartões que "sobem" no hover (design system). */
 
 @utility strike-anim {
   position: relative;

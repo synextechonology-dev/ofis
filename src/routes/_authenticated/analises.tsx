@@ -374,7 +374,7 @@ function AnalisesPage() {
       <section className="grid gap-4 lg:grid-cols-5">
         <Card
           className={cn(
-            "hover-lift rounded-lg shadow-kpi lg:col-span-2",
+            "rounded-lg shadow-kpi lg:col-span-2",
             alerta ? "border-2 border-destructive" : "border border-border",
           )}
         >

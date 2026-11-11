@@ -21,25 +21,25 @@ export const TIPO_EVENTO_META: Record<
   vencimento_das: {
     label: "Vencimento DAS",
     icon: AlarmClock,
-    badgeClass: "bg-destructive text-destructive-foreground",
-    dotClass: "bg-destructive",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    dotClass: "bg-warning",
   },
   obrigacao: {
     label: "Obrigação",
     icon: FileCheck2,
-    badgeClass: "bg-warning text-warning-foreground",
-    dotClass: "bg-warning",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    dotClass: "bg-accent-foreground",
   },
   lembrete: {
     label: "Lembrete",
     icon: Bell,
-    badgeClass: "bg-tipo-comercio text-tipo-foreground",
-    dotClass: "bg-tipo-comercio",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    dotClass: "bg-muted-foreground",
   },
   reuniao: {
     label: "Reunião",
     icon: Users,
-    badgeClass: "bg-tipo-servico text-tipo-foreground",
-    dotClass: "bg-tipo-servico",
+    badgeClass: "border border-border bg-transparent text-muted-foreground",
+    dotClass: "bg-transparent ring-2 ring-inset ring-muted-foreground",
   },
 };

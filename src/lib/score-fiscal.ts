@@ -55,10 +55,10 @@ export function calcularScoreFiscal(
   const total = Math.min(100, pontosNotas + pontosObrigacoes + pontosFrequencia);
   const faixa =
     total >= 80
-      ? { label: "Excelente", className: "bg-success text-success-foreground" }
+      ? { label: "Excelente", className: "bg-success/12 text-success" }
       : total >= 60
-        ? { label: "Regular", className: "bg-warning text-warning-foreground" }
-        : { label: "Atenção", className: "bg-destructive text-destructive-foreground" };
+        ? { label: "Regular", className: "bg-warning/12 text-warning" }
+        : { label: "Atenção", className: "bg-destructive/12 text-destructive" };
 
   return {
     total,
